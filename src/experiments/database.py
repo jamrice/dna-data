@@ -11,9 +11,10 @@ db_username = os.getenv("DATABASE_USERNAME")
 db_password = os.getenv("DATABASE_PASSWORD")
 
 # MySQL Database URL (example: using mysqlclient)
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://{un}:{pw}@localhost/test_db_2".format(
-    un=db_username, pw=db_password
+SQLALCHEMY_DATABASE_URL = (
+    f"mysql+mysqlconnector://{db_username}:{db_password}@localhost/test_db_2"
 )
+
 
 # Creating the engine
 engine = create_engine(
