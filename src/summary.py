@@ -6,7 +6,6 @@ from src.DB_manager import db_manager
 
 
 class Summarizer:
-
     def __init__(self, bill_summary: str):
         """
         Initializes the Summarizer class by configuring the Google Generative AI API with
