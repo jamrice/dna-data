@@ -10,19 +10,12 @@ from src.experiments.models import Base
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-db_username = os.getenv("DATABASE_USERNAME")
-db_password = os.getenv("DATABASE_PASSWORD")
 
+load_dotenv()
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-if not config.get_main_option("sqlalchemy.url"):
-    config.set_main_option(
-        "squlalchemy.url",
-        f"mysql+mysqlconnector://{db_username}:{db_password}@localhost/test_db_2",
-    )
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
