@@ -24,6 +24,9 @@ dependencies = [
 python = ">=3.10,<3.13"
 apache-airflow = "^2.10.5"
 
+[tool.poetry]
+name = "dna_database"
+packages = [{ include = "src" }]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
