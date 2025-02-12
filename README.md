@@ -13,3 +13,6 @@ poetry shell
 
 //추가된 패키지 설치하기
 poetry install
+
+//프리커밋 활성화
+pre-commit install
