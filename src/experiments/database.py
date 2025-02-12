@@ -2,9 +2,18 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import OperationalError
 
+import os
+from dotenv import load_dotenv
+
+# 환경변수를 사용하여 비밀번호 가져오기
+load_dotenv()
+db_username = os.getenv("DATABASE_USERNAME")
+db_password = os.getenv("DATABASE_PASSWORD")
 
 # MySQL Database URL (example: using mysqlclient)
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:welcome1516@localhost/test_db"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://{un}:{pw}@localhost/test_db_2".format(
+    un=db_username, pw=db_password
+)
 
 # Creating the engine
 engine = create_engine(
@@ -17,7 +26,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Base class
 Base = declarative_base()
 
-# Naming convention for constraints
+# 이게 필요한가?
 naming_convention = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
