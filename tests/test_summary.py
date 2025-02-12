@@ -44,6 +44,24 @@ def test_get_paragraph(mock_bill_extractor, mock_api_key_manager, mock_genai, mo
     assert summarizer.get_paragraph() == "Test Paragraph"
 
 def test_save_summary(mock_bill_extractor, mock_api_key_manager, mock_genai, mock_logger, mock_db_manager):
+    """
+    Test the save_summary method of the Summarizer class.
+
+    This test verifies that the save_summary method correctly saves the summary
+    data to the database using the mock_db_manager. It checks that the save_table
+    method is called once with the correct parameters.
+
+    Args:
+        mock_bill_extractor (Mock): Mock object for the bill extractor.
+        mock_api_key_manager (Mock): Mock object for the API key manager.
+        mock_genai (Mock): Mock object for the GenAI.
+        mock_logger (Mock): Mock object for the logger.
+        mock_db_manager (Mock): Mock object for the database manager.
+
+    Asserts:
+        mock_db_manager.save_table.assert_called_once_with: Ensures that the
+        save_table method is called once with the expected table name and data.
+    """
     summarizer = Summarizer(mock_bill_extractor.bill_summary)
     summarizer.headline = "Test Headline"
     summarizer.paragraph = "Test Paragraph"
