@@ -11,7 +11,7 @@ db_username = os.getenv("DATABASE_USERNAME")
 db_password = os.getenv("DATABASE_PASSWORD")
 
 # MySQL Database URL (example: using mysqlclient)
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://{un}:{pw}@localhost/test_db".format(
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://{un}:{pw}@localhost/test_db_2".format(
     un=db_username, pw=db_password
 )
 

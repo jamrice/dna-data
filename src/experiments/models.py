@@ -1,12 +1,12 @@
 from datetime import datetime
 from sqlalchemy import String, Integer, Text, Date, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from database import Base
+from .database import Base
 from typing import Optional
 
 
 class Conf(Base):
-    tablename = "conf"
+    __tablename__ = "conf"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     url: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -21,7 +21,7 @@ class Conf(Base):
 
 
 class ConfSummary(Base):
-    tablename = "conf_summary"
+    __tablename__ = "conf_summary"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     headline: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -34,7 +34,7 @@ class ConfSummary(Base):
 
 
 class ConfSummaryRelation(Base):
-    tablename = "conf_summary_relation"
+    __tablename__ = "conf_summary_relation"
 
     conf_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("conf.id"), primary_key=True
@@ -49,7 +49,7 @@ class ConfSummaryRelation(Base):
 
 
 class Bill(Base):
-    tablename = "bill"
+    __tablename__ = "bill"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     bill_id: Mapped[Optional[str]] = mapped_column(
@@ -78,7 +78,7 @@ class Bill(Base):
 
 
 class BillSummary(Base):
-    tablename = "bill_summary"
+    __tablename__ = "bill_summary"
 
     summary_id: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True
@@ -98,7 +98,7 @@ class BillSummary(Base):
 
 
 class BillSummaryRelation(Base):
-    tablename = "bill_summary_relation"
+    __tablename__ = "bill_summary_relation"
 
     bill_id: Mapped[Optional[str]] = mapped_column(
         String(255), ForeignKey("bill.bill_id"), nullable=True
