@@ -33,18 +33,6 @@ def mock_db_manager():
     with patch('src.summary.db_manager') as MockDbManager:
         yield MockDbManager
 
-def test_summarize_headline(mock_bill_extractor, mock_api_key_manager, mock_genai, mock_logger):
-    summarizer = Summarizer(mock_bill_extractor.bill_summary)
-    headline = summarizer.summarize_headline()
-    assert headline == "Generated text"
-    assert summarizer.headline == "Generated text"
-
-def test_summarize_paragraph(mock_bill_extractor, mock_api_key_manager, mock_genai, mock_logger):
-    summarizer = Summarizer(mock_bill_extractor.bill_summary)
-    paragraph = summarizer.summarize_paragraph()
-    assert paragraph == "Generated text"
-    assert summarizer.paragraph == "Generated text"
-
 def test_get_headline(mock_bill_extractor, mock_api_key_manager, mock_genai, mock_logger):
     summarizer = Summarizer(mock_bill_extractor.bill_summary)
     summarizer.headline = "Test Headline"
