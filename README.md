@@ -67,7 +67,3 @@ alembic upgrade head
 - MySQL 서버가 실행 중이고, 제공된 사용자 이름과 비밀번호가 정확한지 확인하세요.
 - `alembic`과 `mysql-connector-python` 패키지가 올바르게 설치되었는지 확인하세요.
 - `alembic.ini` 파일 내 `sqlalchemy.url` 항목에 오타가 없는지 다시 확인하세요.
-
----
-
-이 README 파일은 Alembic을 설정하고 MySQL 데이터베이스와 연결하는 방법을 안내합니다. `alembic.ini` 파일에서 MySQL 연결 정보를 정확히 입력하고, 이후 Alembic을 사용하여 데이터베이스 마이그레이션을 진행할 수 있습니다.
