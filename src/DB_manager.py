@@ -2,6 +2,7 @@ import mysql.connector
 from src.load import api_keyManager
 from src.dna_logger import logger
 
+
 def catch_sql_except(func):
     def wrapper(*args, **kwargs):
         try:
