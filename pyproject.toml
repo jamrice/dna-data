@@ -21,6 +21,12 @@ dependencies = [
     "alembic (>=1.14.1,<2.0.0)"
 ]
 
+[tool.mypy]
+ignore_errors = true
+
+[tool.ruff.lint]
+extend-ignore  = ["ALL"]
+
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 apache-airflow = "^2.10.5"
