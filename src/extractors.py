@@ -281,7 +281,6 @@ class BillExtractor:
             root = ET.fromstring(response.content)
             result_code = root.find(".//CODE").text
             if result_code != "INFO-000":
-
                 logger.error(f"Error: {root.find('.//MESSAGE').text}")
                 return None
 
@@ -298,7 +297,6 @@ class BillExtractor:
             return bill_info
 
         except ET.ParseError as e:
-
             logger.error(f"Error: Failed to parse XML - {str(e)}")
             logger.error(f"Error: Response content - {response.text}")
             return None
@@ -438,7 +436,6 @@ class All_KeywordExtractor:
 
 class KeywordExtractor:
     def __init__(self, bill_id):
-
         self.bill_id = bill_id
 
         table = "bill_summary"
