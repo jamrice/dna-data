@@ -1,6 +1,16 @@
 import logging
 import os
 from datetime import datetime
+import sys
+
+
+def is_running_with_pytest():
+    return "pytest" in sys.modules
+
+
+if is_running_with_pytest():
+    logging.disable(logging.CRITICAL)
+    print("✅ pytest에서 실행 중입니다!")
 
 now = datetime.now()
 formatted_time = now.strftime("%Y%m%d%H%M")
@@ -11,9 +21,6 @@ log_file_path = os.path.join(os.getcwd(), "./logs/" + formatted_time + ".log")
 logger = logging.getLogger("my_app_logger")
 logger.setLevel(logging.DEBUG)  # 가장 상세한 수준인 DEBUG 레벨 설정
 
-# 파일 핸들러 생성
-file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
-file_handler.setLevel(logging.INFO)
 
 # 콘솔에 로그를 출력하기 위한 핸들러(Handler) 생성
 console_handler = logging.StreamHandler()
@@ -24,7 +31,13 @@ formatter = logging.Formatter(
     fmt="%(asctime)s - %(name)s - [%(levelname)s] - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-file_handler.setFormatter(formatter)
+
+
 # 로거에 핸들러 추가
 logger.addHandler(console_handler)
-logger.addHandler(file_handler)
+
+if not is_running_with_pytest():  # 파일 핸들러 생성
+    file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
