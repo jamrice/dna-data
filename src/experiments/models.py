@@ -6,7 +6,7 @@ from typing import Optional
 
 
 class Conf(Base):
-    __tablename__ = "conf"
+    __tablename__ = "conferences"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     url: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -21,13 +21,15 @@ class Conf(Base):
 
 
 class ConfSummary(Base):
-    __tablename__ = "conf_summary"
+    __tablename__ = "conf_summaries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     headline: Mapped[str] = mapped_column(String(255), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     bill_id: Mapped[int] = mapped_column(Integer, nullable=True)
-    conf_id: Mapped[int] = mapped_column(Integer, ForeignKey("conf.id"), nullable=True)
+    conf_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("conferences.id"), nullable=True
+    )
 
     # Relationship with conf_summary_relation
     # relations = relationship("ConfSummaryRelation", back_populates="summary")
@@ -37,10 +39,10 @@ class ConfSummaryRelation(Base):
     __tablename__ = "conf_summary_relation"
 
     conf_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("conf.id"), primary_key=True
+        Integer, ForeignKey("conferences.id"), primary_key=True
     )
     summary_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("conf_summary.id"), primary_key=True
+        Integer, ForeignKey("conf_summaries.id"), primary_key=True
     )
 
     # Relationships
@@ -49,7 +51,7 @@ class ConfSummaryRelation(Base):
 
 
 class Bill(Base):
-    __tablename__ = "bill"
+    __tablename__ = "bills"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     bill_id: Mapped[Optional[str]] = mapped_column(
@@ -78,7 +80,7 @@ class Bill(Base):
 
 
 class BillSummary(Base):
-    __tablename__ = "bill_summary"
+    __tablename__ = "bill_summaries"
 
     summary_id: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True
@@ -86,10 +88,10 @@ class BillSummary(Base):
     headline: Mapped[str] = mapped_column(String(255), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     bill_id: Mapped[Optional[str]] = mapped_column(
-        String(255), ForeignKey("bill.bill_id"), nullable=True
+        String(255), ForeignKey("bills.bill_id"), nullable=True
     )
     conf_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("conf.id"), nullable=True
+        Integer, ForeignKey("conferences.id"), nullable=True
     )
 
     # Relationship with Bill and ConfSummaryRelation
@@ -101,10 +103,10 @@ class BillSummaryRelation(Base):
     __tablename__ = "bill_summary_relation"
 
     bill_id: Mapped[Optional[str]] = mapped_column(
-        String(255), ForeignKey("bill.bill_id"), nullable=True
+        String(255), ForeignKey("bills.bill_id"), nullable=True
     )
     summary_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("bill_summary.summary_id"), primary_key=True
+        Integer, ForeignKey("bill_summaries.summary_id"), primary_key=True
     )
 
     # Relationships (optional, based on need)
