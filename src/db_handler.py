@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from src.dna_logger import logger
-from experiments.database import get_db
-from experiments.models import Bill  # Bill 모델 클래스 정의가 필요합니다
+from database import get_db
+from models import Bill  # Bill 모델 클래스 정의가 필요합니다
 from sqlalchemy.exc import SQLAlchemyError
 
 
