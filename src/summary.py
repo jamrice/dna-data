@@ -2,7 +2,7 @@ import google.generativeai as genai
 from src.load import api_keyManager
 from src.extractors import BillExtractor
 from src.dna_logger import logger
-from src.DB_manager import db_manager
+from src.db_handler import db_manager
 
 
 class Summarizer:
