@@ -57,17 +57,3 @@ class BillRecommender:
         ]
 
         return recommendations
-
-
-def extract_bills_summary():
-    """bills 테이블에서 summary를 추출하는 함수"""
-    db = SessionLocal()
-    try:
-        # 모든 법안의 summary를 가져옴
-        summaries = db.query(Bill.body).all()
-        return [summary[0] for summary in summaries]  # 튜플에서 summary만 추출
-    except Exception as e:
-        print(f"Error extracting summaries: {str(e)}")
-        return []
-    finally:
-        db.close()

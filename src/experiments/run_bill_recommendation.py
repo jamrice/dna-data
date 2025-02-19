@@ -1,44 +1,26 @@
-from src.database import get_db
+from src.database import SessionLocal
 from src.models import Bill, BillRecommendation
 from src.dna_logger import logger
-from src.experiments.bill_recommendation_pipeline import (
-    BillRecommender,
-    extract_bills_summary,
-)
+from src.experiments.bill_recommendation_pipeline import BillRecommender
 from src.summary import Summarizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 import pandas as pd
 
-import os
-from dotenv import load_dotenv
 
-
-def get_bills_from_db(user="root", password="your_password"):
-    """데이터베이스에서 법안 정보를 가져옴"""
-    db = None  # db 변수를 초기화
+def extract_bills_summary():
+    """bills 테이블에서 summary를 추출하는 함수"""
+    db = SessionLocal()
     try:
-        db = get_db()  # 인자 없이 호출
-        with db.cursor(dictionary=True) as cursor:
-            cursor.execute(
-                "SELECT bill_no, summary FROM bills WHERE summary IS NOT NULL"
-            )
-            bills = cursor.fetchall()
-
-            formatted_bills = [
-                {"id": bill["bill_no"], "body": bill["summary"]} for bill in bills
-            ]
-
-            logger.info(f"Retrieved {len(formatted_bills)} bills from database")
-            return formatted_bills
-
+        # 모든 법안의 summary를 가져옴
+        summaries = db.query(Bill.body).all()
+        return [summary[0] for summary in summaries]  # 튜플에서 summary만 추출
     except Exception as e:
-        logger.error(f"Error fetching bills from database: {str(e)}")
-        raise
+        print(f"Error extracting summaries: {str(e)}")
+        return []
     finally:
-        if db:  # db가 None이 아닐 때만 close 호출
-            db.close()
+        db.close()
 
 
 def save_recommendations_to_db(
@@ -50,7 +32,7 @@ def save_recommendations_to_db(
 ):
     """추천 결과를 데이터베이스에 저장"""
     try:
-        db = get_db(host=host, user=user, password=password)
+        db = SessionLocal()
         with db.cursor() as cursor:
             # 기존 추천 결과 삭제
             BillRecommendation.delete_by_source_bill(cursor, source_bill_id)
@@ -77,13 +59,11 @@ def save_recommendations_to_db(
         db.close()
 
 
-def generate_all_recommendations(
-    host="localhost", user="root", password="your_password"
-):
+def generate_all_recommendations(summaries):
     """모든 법안에 대한 추천 생성"""
     try:
         # 데이터베이스에서 법안 정보 가져오기
-        bills = get_bills_from_db(host=host, user=user, password=password)
+        bills = summaries
 
         if not bills:
             logger.warning("No bills found in database")
@@ -93,12 +73,10 @@ def generate_all_recommendations(
         translated_summaries = []
 
         # 각 법안에 대해 요약을 영어로 번역
-        for bill in bills:
-            summarizer = Summarizer(bill["body"])
+        for idx, bill in enumerate(bills):
+            summarizer = Summarizer(bill)
             translated_summary = summarizer.translate_to_english()
-            translated_summaries.append(
-                {"id": bill["id"], "summary": translated_summary}
-            )
+            translated_summaries.append({"id": idx, "summary": translated_summary})
 
         # TF-IDF 벡터라이저 설정
         tfidf_vectorizer = TfidfVectorizer(stop_words="english")
@@ -140,10 +118,8 @@ def generate_all_recommendations(
 
 
 if __name__ == "__main__":
-    load_dotenv()
-    DB_USER = os.getenv("DATABASE_USERNAME")
-    DB_PASSWORD = os.getenv("DATABASE_PASSWORD")
-    DB_HOST = "localhost"
+    summaries = extract_bills_summary()
+    print(summaries)
 
     # 추천 시스템 실행
-    generate_all_recommendations(host=DB_HOST, user=DB_USER, password=DB_PASSWORD)
+    generate_all_recommendations()
