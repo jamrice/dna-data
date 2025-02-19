@@ -5,7 +5,7 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 import re
 from src.dna_logger import logger
-from src.DB_manager import db_manager
+from src.db_handler import db_manager
 import google.generativeai as genai
 
 
