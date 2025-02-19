@@ -4,6 +4,8 @@ from src.extractors import BillExtractor
 from src.dna_logger import logger
 from src.db_handler import db_manager
 
+import time
+
 
 class Summarizer:
 
@@ -99,6 +101,7 @@ class Summarizer:
         config = genai.GenerationConfig(
             temperature=temperature, stop_sequences=[stop_sequence]
         )
+        time.sleep(3)
         response = model.generate_content(contents=[text], generation_config=config)
         return response.text
 
