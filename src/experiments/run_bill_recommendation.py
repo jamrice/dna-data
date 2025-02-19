@@ -87,6 +87,7 @@ def generate_all_recommendations(summaries):
         # 코사인 유사도 계산
         cosine_sim = cosine_similarity(tfidf_matrix)
         cosine_sim_df = pd.DataFrame(cosine_sim)
+        print(translated_summaries)
         print(cosine_sim_df)
 
         # 추천 결과 생성
@@ -103,14 +104,14 @@ def generate_all_recommendations(summaries):
                         "similarity_score": cosine_sim[idx][sim_idx],
                     }
                 )
-
+        return recommendations
         # 추천 결과를 DB에 저장
         # for bill in translated_summaries:
         #     save_recommendations_to_db(
         #         recommendations, bill["id"], host, user, password
         #     )
 
-        logger.info("Recommendation generation completed!")
+        # logger.info("Recommendation generation completed!")
 
     except Exception as e:
         logger.error(f"Error in recommendation generation process: {str(e)}")
@@ -119,7 +120,6 @@ def generate_all_recommendations(summaries):
 
 if __name__ == "__main__":
     summaries = extract_bills_summary()
-    print(summaries)
 
     # 추천 시스템 실행
-    generate_all_recommendations()
+    generate_all_recommendations(summaries)
