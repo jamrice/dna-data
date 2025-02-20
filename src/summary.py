@@ -4,6 +4,8 @@ from src.extractors import BillExtractor
 from src.dna_logger import logger
 from src.db_handler import db_manager
 
+import time
+
 
 class Summarizer:
 
@@ -74,6 +76,33 @@ class Summarizer:
         )
         response = model.generate_content(contents=[text], generation_config=config)
         self.paragraph = response.text
+        return response.text
+
+    def translate_to_english(self):
+        """
+        Translates the bill's summary into English using generative AI.
+
+        This method uses the generative AI model 'gemini-1.5-flash' to translate
+        the summary into English.
+
+        Returns:
+        str: The translated summary in English.
+        """
+        text = self.bill_summary
+        if self.bill_summary == "":
+            logger.info("Info: empty summary")
+            return
+
+        system_instructions = "주어진 문단을 영어로 번역해줘"
+        model = "gemini-1.5-flash"
+        temperature = 0
+        stop_sequence = "종료!"
+        model = genai.GenerativeModel(model, system_instruction=system_instructions)
+        config = genai.GenerationConfig(
+            temperature=temperature, stop_sequences=[stop_sequence]
+        )
+        time.sleep(3)
+        response = model.generate_content(contents=[text], generation_config=config)
         return response.text
 
     def get_headline(self):
