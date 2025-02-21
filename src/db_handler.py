@@ -3,6 +3,7 @@ from src.dna_logger import logger
 from .database import get_db
 from .models import Bill  # Bill 모델 클래스 정의가 필요합니다
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import NoResultFound
 
 
 def catch_sql_except(func):
@@ -16,25 +17,49 @@ def catch_sql_except(func):
 
 
 class DBManager:
-
     def __init__(self, db_session: Session):
         self.db = db_session
 
     @catch_sql_except
+    def check_bill_exists(self, bill_id):
+        """의안 번호로 기존 데이터 존재 여부 확인"""
+        existing_bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
+        return existing_bill is not None
+
+    @catch_sql_except
     def save_bill(self, params):
-        bill = Bill(
-            bill_id=params[0],
-            url=params[1],
-            num=params[2],
-            title=params[3],
-            body=params[4],
-            pdf_url=params[5],
-            date=params[6],
-            ord_num=params[7],
-        )
-        self.db.add(bill)
-        self.db.commit()
-        return bill
+        try:
+            # 기존 의안 확인
+            if self.check_bill_exists(params[0]):
+                logger.info(f"Bill {params[2]} already exists, delete...")
+                self.del_bill(params[0])
+
+            bill = Bill(
+                bill_id=params[0],
+                url=params[1],
+                num=params[2],
+                title=params[3],
+                body=params[4],
+                pdf_url=params[5],
+                date=params[6],
+                ord_num=params[7],
+            )
+            self.db.add(bill)
+            self.db.commit()
+            logger.info(f"Successfully saved bill {params[2]}")
+            return bill
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to save bill {params[2]}: {str(e)}")
+            return None
+
+    @catch_sql_except
+    def get_bill(self, bill_id: str):
+        try:
+            bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).one()
+            return bill
+        except NoResultFound:
+            return logger.info("Bill not found")
 
     @catch_sql_except
     def del_bill(self, bill_id):

@@ -1,12 +1,25 @@
 from src.database import SessionLocal
 from src.models import Bill, BillRecommendation
 from src.dna_logger import logger
-from src.experiments.bill_recommendation_pipeline import BillRecommender
 from src.summary import Summarizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 import pandas as pd
+
+
+def extract_bills_id():
+    """bills 테이블에서 summary를 추출하는 함수"""
+    db = SessionLocal()
+    try:
+        # 모든 법안의 summary를 가져옴
+        summaries = db.query(Bill.bill_id).all()
+        return [summary[0] for summary in summaries]  # 튜플에서 summary만 추출
+    except Exception as e:
+        print(f"Error extracting summaries: {str(e)}")
+        return []
+    finally:
+        db.close()
 
 
 def extract_bills_summary():
@@ -59,6 +72,41 @@ def save_recommendations_to_db(
         db.close()
 
 
+def translate_summary(summary):
+    """요약을 영어로 번역"""
+    summarizer = Summarizer(summary)
+    return summarizer.translate_to_english()
+
+
+def translate_summaries(summaries):
+    """모든 법안에 대한 영어로 번역"""
+    return [translate_summary(summary) for summary in summaries]
+
+
+def cosine_similarity_compute(tfidf_matrix, translated_summaries):
+    # 코사인 유사도 계산
+    cosine_sim = cosine_similarity(tfidf_matrix)
+    cosine_sim_df = pd.DataFrame(cosine_sim)
+    print(translated_summaries)
+    print(cosine_sim_df)
+
+    # 추천 결과 생성
+    recommendations = []
+    for idx, bill in enumerate(translated_summaries):
+        similar_indices = cosine_sim[idx].argsort()[::-1][
+            1:5
+        ]  # 자기 자신 제외하고 상위 4개 (현재 데이터 5개밖에 없음)
+        for sim_idx in similar_indices:
+            recommendations.append(
+                {
+                    "bill_id": bill["id"],
+                    "recommended_bill_id": translated_summaries[sim_idx]["id"],
+                    "similarity_score": cosine_sim[idx][sim_idx],
+                }
+            )
+    return recommendations
+
+
 def generate_all_recommendations(summaries):
     """모든 법안에 대한 추천 생성"""
     try:
@@ -71,39 +119,16 @@ def generate_all_recommendations(summaries):
 
         # 영어로 번역된 요약을 저장할 리스트
         translated_summaries = []
-
+        logger.info("Translating summaries...")
         # 각 법안에 대해 요약을 영어로 번역
-        for idx, bill in enumerate(bills):
-            summarizer = Summarizer(bill)
-            translated_summary = summarizer.translate_to_english()
-            translated_summaries.append({"id": idx, "summary": translated_summary})
-
+        translated_summaries = translate_summaries(bills)
+        logger.info("Translated summaries: " + str(len(translated_summaries)))
         # TF-IDF 벡터라이저 설정
         tfidf_vectorizer = TfidfVectorizer(stop_words="english")
         tfidf_matrix = tfidf_vectorizer.fit_transform(
             [bill["summary"] for bill in translated_summaries]
         )
-
-        # 코사인 유사도 계산
-        cosine_sim = cosine_similarity(tfidf_matrix)
-        cosine_sim_df = pd.DataFrame(cosine_sim)
-        print(translated_summaries)
-        print(cosine_sim_df)
-
-        # 추천 결과 생성
-        recommendations = []
-        for idx, bill in enumerate(translated_summaries):
-            similar_indices = cosine_sim[idx].argsort()[::-1][
-                1:5
-            ]  # 자기 자신 제외하고 상위 4개 (현재 데이터 5개밖에 없음)
-            for sim_idx in similar_indices:
-                recommendations.append(
-                    {
-                        "bill_id": bill["id"],
-                        "recommended_bill_id": translated_summaries[sim_idx]["id"],
-                        "similarity_score": cosine_sim[idx][sim_idx],
-                    }
-                )
+        recommendations = cosine_similarity_compute(tfidf_matrix, translated_summaries)
         return recommendations
         # 추천 결과를 DB에 저장
         # for bill in translated_summaries:
@@ -120,6 +145,6 @@ def generate_all_recommendations(summaries):
 
 if __name__ == "__main__":
     summaries = extract_bills_summary()
-
+    logger.info("Summaries extracted: " + str(len(summaries)))
     # 추천 시스템 실행
     generate_all_recommendations(summaries)
