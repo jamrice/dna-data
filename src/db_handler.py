@@ -15,11 +15,12 @@ def catch_sql_except(func):
     return wrapper
 
 
-class DBManager:
+class DBHandler:
 
     def __init__(self, db_session: Session):
         self.db = db_session
 
+    # Functions regarding Bills
     @catch_sql_except
     def save_bill(self, params):
         bill = Bill(
@@ -74,15 +75,41 @@ class DBManager:
         finally:
             self.db.close()
 
+    def save_summary(self, summarizer):
+        from src.summary import Summarizer
+
+        columns = ("headline", "body", "bill_id", "conf_id")
+        params = (
+            summarizer.get_headline(),
+            summarizer.get_paragraph(),
+            summarizer.bill_id,
+            summarizer.conf_id,
+        )
+        table = "bill_summaries"
+        self.db.save_table(table, columns, params)
+
+    def read_summary(self, bill_id):
+        """주어진 bill_id에 대한 summary를 읽어오는 함수"""
+        try:
+            result = self.db.query(
+                "SELECT * FROM bill_summaries WHERE bill_id = :bill_id",
+                {"bill_id": bill_id},
+            ).first()
+            return result
+        except Exception as e:
+            logger.error(f"Error reading summary: {str(e)}")
+            return None
+
 
 # Dependency for DB connection
-def get_db_manager():
+def get_db_handler():
     db = next(get_db())  # get_db()는 generator이므로 next()로 세션 가져옴
-    return DBManager(db)
+    return DBHandler(db)
 
+
+db_handler = get_db_handler()
 
 if __name__ == "__main__":
-    db_manager = get_db_manager()
     params = {
         "bill_id": "test_id",
         "url": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_N2C4C1O1V2V0N2G0J5X0V5Z3L7Z5Z0",
@@ -93,9 +120,9 @@ if __name__ == "__main__":
         "date": "2024-11-27",
         "ord_num": "22",
     }
-    db_manager.save_bill(params)
-    summaries = db_manager.extract_bills_summary()
+    db_handler.save_bill(params)
+    summaries = db_handler.extract_bills_summary()
     for idx, summary in enumerate(summaries):
         print(f"summary {idx}: ")
         print(summary)
-    db_manager.del_bill("test_id")
+    db_handler.del_bill("test_id")
