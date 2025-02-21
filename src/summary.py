@@ -22,7 +22,7 @@ class Summarizer:
             self.summarize_paragraph()
         except Exception as e:
             logger.error(f"Error: summarize error occurred {str(e)}")
-        self.bill_id = None
+        self.bill_id = None  # need to implement how to deal with bill_id
         self.conf_id = None
 
     def summarize_headline(self):
