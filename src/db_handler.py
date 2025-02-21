@@ -1,8 +1,10 @@
+from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.dna_logger import logger
 from src.database import get_db
-from src.models import Bill  # Bill 모델 클래스 정의가 필요합니다
-from sqlalchemy.exc import SQLAlchemyError
+from src.models import Bill, BillSummary  # Bill 모델 클래스 정의가 필요합니다
 
 
 def catch_sql_except(func):
@@ -20,7 +22,7 @@ class DBHandler:
     def __init__(self, db_session: Session):
         self.db = db_session
 
-    # Functions regarding Bills
+    # functions regarding bills
     @catch_sql_except
     def save_bill(self, params):
         bill = Bill(
@@ -75,24 +77,23 @@ class DBHandler:
         finally:
             self.db.close()
 
+    # functions regarding summaries
     def save_summary(self, summarizer):
-        from src.summary import Summarizer
-
-        columns = ("headline", "body", "bill_id", "conf_id")
-        params = (
-            summarizer.get_headline(),
-            summarizer.get_paragraph(),
-            summarizer.bill_id,
-            summarizer.conf_id,
+        summary = BillSummary(
+            headline=summarizer.get_headline(),
+            body=summarizer.get_paragraph(),
+            bill_id=summarizer.bill_id,
+            conf_id=summarizer.conf_id,
         )
-        table = "bill_summaries"
-        self.db.save_table(table, columns, params)
+        self.db.add(summary)
+        self.db.commit()
+        return summary
 
     def read_summary(self, bill_id):
         """주어진 bill_id에 대한 summary를 읽어오는 함수"""
         try:
             result = self.db.query(
-                "SELECT * FROM bill_summaries WHERE bill_id = :bill_id",
+                text("SELECT * FROM bill_summaries WHERE bill_id = :bill_id"),
                 {"bill_id": bill_id},
             ).first()
             return result

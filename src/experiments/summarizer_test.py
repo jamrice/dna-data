@@ -11,7 +11,5 @@ if __name__ == "__main__":
     print("Headline : ", sz.get_headline())
     print("Paragraph : ", sz.get_paragraph())
     db_handler = get_db_handler()
-    db_handler.save_summary(sz)
-    summaries = db_handler.read_summary
-    for summary in summaries:
-        print(summary)
+    sm = db_handler.save_summary(sz)
+    print("done")
