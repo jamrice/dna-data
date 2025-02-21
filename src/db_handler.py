@@ -66,7 +66,7 @@ class DBHandler:
 
     @catch_sql_except
     def extract_bills_summary(self):
-        """bills 테이블에서 summary를 추출하는 함수"""
+        """bills 테이블에서 모든 summary를 추출하는 함수"""
         try:
             # 모든 법안의 summary를 가져옴
             summaries = self.db.query(Bill.body).all()

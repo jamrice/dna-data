@@ -1,26 +1,12 @@
 from src.database import SessionLocal
 from src.models import Bill, BillRecommendation
 from src.dna_logger import logger
-from src.experiments.bill_recommendation_pipeline import BillRecommender
 from src.summary import Summarizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from src.db_handler import get_db_handler
 
 import pandas as pd
-
-
-def extract_bills_summary():
-    """bills 테이블에서 summary를 추출하는 함수"""
-    db = SessionLocal()
-    try:
-        # 모든 법안의 summary를 가져옴
-        summaries = db.query(Bill.body).all()
-        return [summary[0] for summary in summaries]  # 튜플에서 summary만 추출
-    except Exception as e:
-        print(f"Error extracting summaries: {str(e)}")
-        return []
-    finally:
-        db.close()
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def save_recommendations_to_db(
@@ -119,7 +105,8 @@ def generate_all_recommendations(summaries):
 
 
 if __name__ == "__main__":
-    summaries = extract_bills_summary()
+    db_handler = get_db_handler()
+    summaries = db_handler.extract_bills_summary()
 
     # 추천 시스템 실행
     generate_all_recommendations(summaries)
