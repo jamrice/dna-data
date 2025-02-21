@@ -32,7 +32,7 @@ class DBManager:
             # 기존 의안 확인
             if self.check_bill_exists(params[0]):
                 logger.info(f"Bill {params[2]} already exists, delete...")
-                self.del_bill(params[0])
+                raise Exception("Bill already exists")
 
             bill = Bill(
                 bill_id=params[0],

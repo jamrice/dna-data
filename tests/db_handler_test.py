@@ -37,6 +37,9 @@ def before_clean_bill(db_manager, sample_bill_params):
 
 
 def test_save_bill(db_manager, sample_bill_params):
+    if db_manager.check_bill_exists(sample_bill_params[0]):
+        db_manager.del_bill(sample_bill_params[0])
+
     # When
     bill = db_manager.save_bill(sample_bill_params)
 
@@ -52,6 +55,8 @@ def test_save_bill(db_manager, sample_bill_params):
 
 
 def test_get_bill(db_manager, sample_bill_params):
+    if db_manager.check_bill_exists(sample_bill_params[0]):
+        db_manager.del_bill(sample_bill_params[0])
     # Given
     saved_bill = db_manager.save_bill(sample_bill_params)
 
@@ -72,6 +77,8 @@ def test_get_nonexistent_bill(db_manager):
 
 
 def test_del_bill(db_manager, sample_bill_params):
+    if db_manager.check_bill_exists(sample_bill_params[0]):
+        db_manager.del_bill(sample_bill_params[0])
     # Given
     db_manager.save_bill(sample_bill_params)
 
@@ -83,6 +90,8 @@ def test_del_bill(db_manager, sample_bill_params):
 
 
 def test_read_all_value_table(db_manager, sample_bill_params):
+    if db_manager.check_bill_exists(sample_bill_params[0]):
+        db_manager.del_bill(sample_bill_params[0])
     # Given
     db_manager.save_bill(sample_bill_params)
 
@@ -95,6 +104,8 @@ def test_read_all_value_table(db_manager, sample_bill_params):
 
 
 def test_read_value_table(db_manager, sample_bill_params):
+    if db_manager.check_bill_exists(sample_bill_params[0]):
+        db_manager.del_bill(sample_bill_params[0])
     # Given
     saved_bill = db_manager.save_bill(sample_bill_params)
 
@@ -106,6 +117,8 @@ def test_read_value_table(db_manager, sample_bill_params):
 
 
 def test_update_value(db_manager, sample_bill_params):
+    if db_manager.check_bill_exists(sample_bill_params[0]):
+        db_manager.del_bill(sample_bill_params[0])
     # Given
     db_manager.save_bill(sample_bill_params)
     new_title = "Updated Title"
