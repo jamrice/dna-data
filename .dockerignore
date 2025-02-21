@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+logs/
+migrations/
+*.log  # 로그 파일 제외
+.DS_Store  # macOS 시스템 파일 제외
+.idea/  # PyCharm 설정 파일 제외
