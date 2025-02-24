@@ -1,9 +1,8 @@
 from src.database import SessionLocal
-from src.models import Bill, BillRecommendation
+from src.models import BillRecommendation
 from src.dna_logger import logger
 from src.summary import Summarizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from src.db_handler import get_db_handler
 
 import pandas as pd
 
@@ -147,4 +146,5 @@ if __name__ == "__main__":
     summaries = extract_bills_summary()
     logger.info("Summaries extracted: " + str(len(summaries)))
     # 추천 시스템 실행
-    generate_all_recommendations(summaries)
+    recommendations = generate_all_recommendations(summaries)
+    print(recommendations)
