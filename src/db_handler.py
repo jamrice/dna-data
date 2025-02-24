@@ -4,7 +4,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.dna_logger import logger
 from src.database import get_db
-from src.models import Bill, BillSummary  # Bill 모델 클래스 정의가 필요합니다
+from src.models import (
+    Bill,
+    BillSummary,
+    SimilarityScore,
+)  # Bill 모델 클래스 정의가 필요합니다
 
 
 def catch_sql_except(func):
@@ -69,8 +73,11 @@ class DBHandler:
         """bills 테이블에서 모든 summary를 추출하는 함수"""
         try:
             # 모든 법안의 summary를 가져옴
-            summaries = self.db.query(Bill.body).all()
-            return [summary[0] for summary in summaries]  # 튜플에서 summary만 추출
+            summaries = self.db.query(Bill).all()
+            return [
+                {"bill_id": bill.bill_id, "bill_summary": bill.body}
+                for bill in summaries
+            ]  # 딕셔너리 리스트로 변환
         except Exception as e:
             print(f"Error extracting summaries: {str(e)}")
             return []
@@ -78,6 +85,7 @@ class DBHandler:
             self.db.close()
 
     # functions regarding summaries
+    @catch_sql_except
     def save_summary(self, summarizer):
         summary = BillSummary(
             headline=summarizer.get_headline(),
@@ -89,6 +97,7 @@ class DBHandler:
         self.db.commit()
         return summary
 
+    @catch_sql_except
     def read_summary(self, bill_id):
         """주어진 bill_id에 대한 summary를 읽어오는 함수"""
         try:
@@ -100,6 +109,33 @@ class DBHandler:
         except Exception as e:
             logger.error(f"Error reading summary: {str(e)}")
             return None
+
+    @catch_sql_except
+    def save_similarity_score(self, target_bill_id, source_bill_id, similarity_score):
+        try:
+            # If self.db is already a session, you don't need `.session` here
+            existing_record = (
+                self.db.query(SimilarityScore)
+                .filter_by(source_bill_id=source_bill_id, target_bill_id=target_bill_id)
+                .first()
+            )
+
+            if existing_record:
+                existing_record.similarity_score = (
+                    similarity_score  # Update the existing score
+                )
+                self.db.commit()  # Commit the transaction
+            else:
+                new_record = SimilarityScore(
+                    source_bill_id=source_bill_id,
+                    target_bill_id=target_bill_id,
+                    similarity_score=similarity_score,
+                )
+                self.db.add(new_record)
+                self.db.commit()  # Commit the transaction
+        except Exception as e:
+            self.db.rollback()  # Roll back the transaction on error
+            logger.error(f"Error saving similarity score: {str(e)}")
 
 
 # Dependency for DB connection
