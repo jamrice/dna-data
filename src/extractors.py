@@ -29,9 +29,9 @@ class ConfExtractor:
         self.na_api_key = api_keyManager.get_na_api_key()
         self.conf_ids: list[str] = []  # To store conference IDs
         self.links: list[str] = []  # Store relevant links like VOD or PDF links
-        self.conf_info: dict[
-            str, str | None
-        ] = {}  # Store information about the first conference
+        self.conf_info: dict[str, str | None] = (
+            {}
+        )  # Store information about the first conference
 
         self.get_conf_info(dae_num, date)  # Fetch the first conference entry
 
@@ -148,7 +148,7 @@ class ConfExtractor:
             password (str): Password for user.
         """
 
-        params = {  
+        params = {
             "id": self.conf_info["CONFER_NUM"],
             "url": self.conf_info["CONF_LINK_URL"],
             "num": self.conf_info["CONFER_NUM"],
@@ -345,7 +345,7 @@ class BillExtractor:
         try:
             return self.bill_soup.find("div", {"id": "summaryContentDiv"}).text.strip()
         except Exception as e:
-            logger.error(f"Error: summaryContentDiv not found - {str(e)}")
+            logger.error(f"Error: This bill url does not contain summary - {str(e)}")
             return ""
 
     def get_bill_no_pdf_url(self) -> tuple:
@@ -416,7 +416,8 @@ class BillExtractor:
             user (str): User name in database ex) root.
             password (str): Password for user.
         """
-
+        if self.bill_info["body"] == "":
+            self.bill_info["body"] = self.bill_info["title"]
         params = {
             "bill_id": self.bill_info["BILL_ID"],
             "url": self.bill_info["LINK_URL"],
