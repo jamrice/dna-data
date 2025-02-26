@@ -7,6 +7,7 @@ from src.models import (
     Bill,
     BillSummary,
     SimilarityScore,
+    Conf,
 )  # Bill 모델 클래스 정의가 필요합니다
 
 
@@ -30,6 +31,21 @@ class DBHandler:
         """주어진 bill_id에 해당하는 법안이 존재하는지 확인하는 함수"""
         bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
         return bill is not None
+
+    @catch_sql_except
+    def save_conf(self, params):
+        conf = Conf(
+            id=params["id"],
+            url=params["url"],
+            num=params["num"],
+            title=params["title"],
+            pdf_url=params["pdf_url"],
+            date=params["date"],
+            ord_num=params["ord_num"],
+        )
+        self.db.add(conf)
+        self.db.commit()
+        return conf
 
     @catch_sql_except
     def save_bill(self, params):
