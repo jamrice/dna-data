@@ -1,5 +1,14 @@
 from datetime import datetime
-from sqlalchemy import String, Integer, Text, Date, DateTime, ForeignKey
+from sqlalchemy import (
+    String,
+    Integer,
+    Text,
+    Date,
+    DateTime,
+    ForeignKey,
+    Float,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 from typing import Optional
@@ -178,3 +187,15 @@ class UserInterest(Base):
     # 각 테이블과의 관계 매핑(M:N 연결 테이블)
     # interest = relationship("Interest", back_populates="user_interests")
     # user = relationship("User", back_populates="user_interests")
+
+
+class SimiilarityScore(Base):
+    __tablename__ = "similarity_scores"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    source_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
+    similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
+    __table_args__ = (
+        UniqueConstraint("source_bill_no", "target_bill_no", name="uq_source_target"),
+    )
