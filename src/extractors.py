@@ -148,15 +148,15 @@ class ConfExtractor:
             password (str): Password for user.
         """
 
-        params = (
-            self.conf_ids[0],
-            self.conf_info["CONF_LINK_URL"],
-            self.conf_info["CONFER_NUM"],
-            self.conf_info["TITLE"],
-            self.conf_info["PDF_LINK_URL"],
-            self.conf_info["CONF_DATE"],
-            self.params_dict["DAE_NUM"],
-        )
+        params = {  
+            "id": self.conf_info["CONFER_NUM"],
+            "url": self.conf_info["CONF_LINK_URL"],
+            "num": self.conf_info["CONFER_NUM"],
+            "title": self.conf_info["TITLE"],
+            "pdf_url": self.conf_info["PDF_LINK_URL"],
+            "date": self.conf_info["CONF_DATE"],
+            "ord_num": self.params_dict["DAE_NUM"],
+        }
 
         db_handler.save_conf(params=params)
 
@@ -417,16 +417,16 @@ class BillExtractor:
             password (str): Password for user.
         """
 
-        params = (
-            self.bill_info["BILL_ID"],
-            self.bill_info["LINK_URL"],
-            self.bill_info["BILL_NO"],
-            self.bill_info["BILL_NM"],
-            self.bill_summary,
-            self.pdf_url,
-            self.bill_info["PPSL_DT"],
-            self.bill_info["BILL_NO"][:2],
-        )
+        params = {
+            "bill_id": self.bill_info["BILL_ID"],
+            "url": self.bill_info["LINK_URL"],
+            "num": self.bill_info["BILL_NO"],
+            "title": self.bill_info["BILL_NM"],
+            "body": self.bill_summary,
+            "pdf_url": self.pdf_url,
+            "date": self.bill_info["PPSL_DT"],
+            "ord_num": self.bill_info["BILL_NO"][:2],
+        }
         db_handler.save_bill(params=params)
 
 
