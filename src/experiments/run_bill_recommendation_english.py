@@ -51,12 +51,12 @@ class SimilarityScoreGenerator:
                         f"Translated content for bill {bill['bill_id']}: \n {translated_title} \n {translated_summary}"
                     )
                 else:
-                    # 애초에 요약이 없는 문서들을 어떻게 처리할지 이야기 필요함
+                    # 요약이 없을 경우 bill_title로 저장
                     translated_contents.append(
                         {
                             "id": bill["bill_id"],
                             "translated_bill_title": bill["bill_title"],
-                            "translated_bill_summary": "No Content",
+                            "translated_bill_summary": bill["bill_title"],
                         }
                     )
                     logger.warning(f"Translation failed for bill {bill['bill_id']}")
