@@ -39,7 +39,7 @@ class SimilarityScoreGenerator:
                 )  # 제목 번역 추가
 
                 # 번역된 요약이 None이 아닌 경우에만 추가
-                if translated_summary is not None and translated_title is not None:
+                if translated_summary is not None:
                     translated_contents.append(
                         {
                             "id": bill["bill_id"],
@@ -55,8 +55,8 @@ class SimilarityScoreGenerator:
                     translated_contents.append(
                         {
                             "id": bill["bill_id"],
-                            "translated_bill_title": bill["bill_title"],
-                            "translated_bill_summary": bill["bill_title"],
+                            "translated_bill_title": translated_title,
+                            "translated_bill_summary": translated_title,
                         }
                     )
                     logger.warning(f"Translation failed for bill {bill['bill_id']}")
