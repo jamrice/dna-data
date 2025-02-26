@@ -80,14 +80,15 @@ class DBHandler:
             setattr(bill, set_column, set_value)
             self.db.commit()
 
+    # 만약 코사인 유사도 계산에 추가적인 정보를 사용한다면 이 함수에서 return해줄 필요가 있음.
     @catch_sql_except
-    def extract_bills_summary(self):
+    def extract_bills_content(self):
         """bills 테이블에서 모든 summary를 추출하는 함수"""
         try:
             # 모든 법안의 summary를 가져옴
             summaries = self.db.query(Bill).all()
             return [
-                {"bill_id": bill.bill_id, "bill_summary": bill.body}
+                {"bill_id": bill.bill_id, "bill_content": bill.title + " " + bill.body}
                 for bill in summaries
             ]  # 딕셔너리 리스트로 변환
         except Exception as e:
