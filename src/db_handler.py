@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from src.dna_logger import logger
 from src.database import get_db
-from src.models import Bill, BillSummary, Conf  # Bill 모델 클래스 정의가 필요합니다
+from src.models import (
+    Bill,
+    BillSummary,
+    SimilarityScore,
+    Conf,
+)  # Bill 모델 클래스 정의가 필요합니다
 
 
 def catch_sql_except(func):
@@ -30,18 +35,18 @@ class DBHandler:
     @catch_sql_except
     def save_conf(self, params):
         conf = Conf(
-            id = params["id"],
-            url = params["url"],
-            num = params["num"],
-            title = params["title"],
-            pdf_url = params["pdf_url"],
-            date = params["date"],
-            ord_num = params["ord_num"],
+            id=params["id"],
+            url=params["url"],
+            num=params["num"],
+            title=params["title"],
+            pdf_url=params["pdf_url"],
+            date=params["date"],
+            ord_num=params["ord_num"],
         )
         self.db.add(conf)
         self.db.commit()
         return conf
-    
+
     @catch_sql_except
     def save_bill(self, params):
         bill = Bill(
@@ -91,13 +96,21 @@ class DBHandler:
             setattr(bill, set_column, set_value)
             self.db.commit()
 
+    # 만약 코사인 유사도 계산에 추가적인 정보를 사용한다면 이 함수에서 return해줄 필요가 있음.
     @catch_sql_except
-    def extract_bills_summary(self):
-        """bills 테이블에서 모든 summary를 추출하는 함수"""
+    def extract_bills_content(self):
+        """bills 테이블에서 모든 content를 추출하는 함수"""
         try:
             # 모든 법안의 summary를 가져옴
-            summaries = self.db.query(Bill.body).all()
-            return [summary[0] for summary in summaries]  # 튜플에서 summary만 추출
+            summaries = self.db.query(Bill).all()
+            return [
+                {
+                    "bill_id": bill.bill_id,
+                    "bill_title": bill.title,
+                    "bill_summary": bill.body,
+                }
+                for bill in summaries
+            ]  # 딕셔너리 리스트로 변환
         except Exception as e:
             print(f"Error extracting summaries: {str(e)}")
             return []
@@ -105,6 +118,7 @@ class DBHandler:
             self.db.close()
 
     # functions regarding summaries
+    @catch_sql_except
     def save_summary(self, summarizer):
         summary = BillSummary(
             headline=summarizer.get_headline(),
@@ -116,6 +130,7 @@ class DBHandler:
         self.db.commit()
         return summary
 
+    @catch_sql_except
     def read_summary(self, bill_id):
         """주어진 bill_id에 대한 summary를 읽어오는 함수"""
         try:
@@ -127,6 +142,33 @@ class DBHandler:
         except Exception as e:
             logger.error(f"Error reading summary: {str(e)}")
             return None
+
+    @catch_sql_except
+    def save_similarity_score(self, target_bill_id, source_bill_id, similarity_score):
+        try:
+            # If self.db is already a session, you don't need `.session` here
+            existing_record = (
+                self.db.query(SimilarityScore)
+                .filter_by(source_bill_id=source_bill_id, target_bill_id=target_bill_id)
+                .first()
+            )
+
+            if existing_record:
+                existing_record.similarity_score = (
+                    similarity_score  # Update the existing score
+                )
+                self.db.commit()  # Commit the transaction
+            else:
+                new_record = SimilarityScore(
+                    source_bill_id=source_bill_id,
+                    target_bill_id=target_bill_id,
+                    similarity_score=similarity_score,
+                )
+                self.db.add(new_record)
+                self.db.commit()  # Commit the transaction
+        except Exception as e:
+            self.db.rollback()  # Roll back the transaction on error
+            logger.error(f"Error saving similarity score: {str(e)}")
 
 
 # Dependency for DB connection
