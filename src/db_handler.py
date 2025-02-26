@@ -1,7 +1,6 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-
+from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from src.dna_logger import logger
 from src.database import get_db
 from src.models import (
@@ -22,11 +21,16 @@ def catch_sql_except(func):
 
 
 class DBHandler:
-
     def __init__(self, db_session: Session):
         self.db = db_session
 
     # functions regarding bills
+    @catch_sql_except
+    def check_bill_exists(self, bill_id) -> bool:
+        """주어진 bill_id에 해당하는 법안이 존재하는지 확인하는 함수"""
+        bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
+        return bill is not None
+
     @catch_sql_except
     def save_bill(self, params):
         bill = Bill(
@@ -42,6 +46,14 @@ class DBHandler:
         self.db.add(bill)
         self.db.commit()
         return bill
+
+    @catch_sql_except
+    def get_bill(self, bill_id: str):
+        try:
+            bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).one()
+            return bill
+        except NoResultFound:
+            return logger.info("Bill not found")
 
     @catch_sql_except
     def del_bill(self, bill_id):

@@ -1,3 +1,4 @@
+from typing import Any
 from src.load import api_keyManager
 import requests
 from bs4 import BeautifulSoup
@@ -26,16 +27,20 @@ class ConfExtractor:
         self.dae_num = dae_num
         self.date = date
         self.na_api_key = api_keyManager.get_na_api_key()
-        self.conf_ids = []  # To store conference IDs
-        self.links = []  # Store relevant links like VOD or PDF links
-        self.conf_info = {}  # Store information about the first conference
+        self.conf_ids: list[str] = []  # To store conference IDs
+        self.links: list[str] = []  # Store relevant links like VOD or PDF links
+        self.conf_info: dict[
+            str, str | None
+        ] = {}  # Store information about the first conference
 
         self.get_conf_info(dae_num, date)  # Fetch the first conference entry
 
         if self.conf_ids:
             self.get_link_from_conf_id(self.conf_ids[0])
 
-    def get_conf_info(self, dae_num: str, date: str) -> tuple:
+    def get_conf_info(
+        self, dae_num: str, date: str
+    ) -> tuple[list[str], dict[str, str]]:
         """
         Retrieves the first conference ID and relevant details from the National Assembly API.
 
@@ -60,37 +65,47 @@ class ConfExtractor:
             logger.error(
                 f"Error: Failed to fetch data, status code {response.status_code}"
             )
-            return None
+            return [], {}
 
         try:
             root = ET.fromstring(response.content)
-            result_code = root.find(".//CODE").text
-            if result_code != "INFO-000":
-                logger.error(f"Error: {root.find('.//MESSAGE').text}")
-                return None
+            result_code = root.find(".//CODE")
+            if result_code is None or result_code.text != "INFO-000":
+                message = root.find(".//MESSAGE")
+                error_msg = message.text if message is not None else "Unknown error"
+                logger.error(f"Error: {error_msg}")
+                return [], {}
 
             # Extract the first conference information
             row = root.find(".//row")
             if row is not None:
-                conference = {
-                    "CONFER_NUM": row.find("CONFER_NUM").text,
-                    "TITLE": row.find("TITLE").text,
-                    "CLASS_NAME": row.find("CLASS_NAME").text,
-                    "CONF_DATE": row.find("CONF_DATE").text,
-                    "VOD_LINK_URL": row.find("VOD_LINK_URL").text,
-                    "CONF_LINK_URL": row.find("CONF_LINK_URL").text,
-                    "PDF_LINK_URL": row.find("PDF_LINK_URL").text,
-                }
+                conference = {}
+                for field in [
+                    "CONFER_NUM",
+                    "TITLE",
+                    "CLASS_NAME",
+                    "CONF_DATE",
+                    "VOD_LINK_URL",
+                    "CONF_LINK_URL",
+                    "PDF_LINK_URL",
+                ]:
+                    element = row.find(field)
+                    conference[field] = element.text if element is not None else ""
+
                 self.conf_info = conference
                 self.conf_ids = [conference["CONFER_NUM"]]
                 return self.conf_ids, self.conf_info
 
+            return [], {}
+
         except ET.ParseError as e:
             logger.error(f"Error: Failed to parse XML - {str(e)}")
             logger.error("Response content:", response.text)
-            return None
+            return [], {}
 
     def get_conf_id(self):
+        if not self.conf_ids:
+            return ""
         return self.conf_ids[0]
 
     def get_link_from_conf_id(self, conf_id: str):
@@ -259,7 +274,7 @@ class BillExtractor:
         self.bill_no, self.pdf_url = self.get_bill_no_pdf_url()
         self.bill_info = self.get_bill_info(self.bill_no)
 
-    def get_bill_info(self, bill_no: str) -> dict:
+    def get_bill_info(self, bill_no: str) -> dict[str, str | Any | None] | None:
         """
         Retrieves detailed bill information from the National Assembly API.
 
@@ -281,7 +296,6 @@ class BillExtractor:
             root = ET.fromstring(response.content)
             result_code = root.find(".//CODE").text
             if result_code != "INFO-000":
-
                 logger.error(f"Error: {root.find('.//MESSAGE').text}")
                 return None
 
@@ -298,7 +312,6 @@ class BillExtractor:
             return bill_info
 
         except ET.ParseError as e:
-
             logger.error(f"Error: Failed to parse XML - {str(e)}")
             logger.error(f"Error: Response content - {response.text}")
             return None
@@ -438,7 +451,6 @@ class All_KeywordExtractor:
 
 class KeywordExtractor:
     def __init__(self, bill_id):
-
         self.bill_id = bill_id
 
         table = "bill_summary"
