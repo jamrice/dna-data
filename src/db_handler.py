@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from src.dna_logger import logger
 from src.database import get_db
-from src.models import Bill, BillSummary  # Bill 모델 클래스 정의가 필요합니다
+from src.models import Bill, BillSummary, Conf  # Bill 모델 클래스 정의가 필요합니다
 
 
 def catch_sql_except(func):
@@ -27,6 +27,21 @@ class DBHandler:
         bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
         return bill is not None
 
+    @catch_sql_except
+    def save_conf(self, params):
+        conf = Conf(
+            id = params["id"],
+            url = params["url"],
+            num = params["num"],
+            title = params["title"],
+            pdf_url = params["pdf_url"],
+            date = params["date"],
+            ord_num = params["ord_num"],
+        )
+        self.db.add(conf)
+        self.db.commit()
+        return conf
+    
     @catch_sql_except
     def save_bill(self, params):
         bill = Bill(

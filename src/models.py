@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Integer, Text, Date, DateTime, ForeignKey, Float
+from sqlalchemy import String, Integer, Text, Date, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 from typing import Optional
@@ -178,15 +178,3 @@ class UserInterest(Base):
     # 각 테이블과의 관계 매핑(M:N 연결 테이블)
     # interest = relationship("Interest", back_populates="user_interests")
     # user = relationship("User", back_populates="user_interests")
-
-
-class BillRecommendation(Base):
-    __tablename__ = "bill_recommendations"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    source_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
-    recommended_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
-    similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(), nullable=False
-    )
