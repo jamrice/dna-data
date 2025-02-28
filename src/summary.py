@@ -76,7 +76,7 @@ class Summarizer:
         self.paragraph = response.text
         return response.text
 
-    def translate_to_english(self):
+    def translate_to_english(self, text):
         """
         Translates the bill's summary into English using generative AI.
 
@@ -87,12 +87,11 @@ class Summarizer:
         str: The translated summary in English.
         """
         try:
-            text = self.bill_summary
-            if self.bill_summary == "":
-                logger.info("Info: empty summary")
+            if text == "":
+                logger.info("Info from translate_to_english: empty text")
                 return
 
-            system_instructions = "주어진 문단을 영어로 번역해줘"
+            system_instructions = "주어진 텍스트를 영어로 번역해줘"
             model = "gemini-1.5-flash"
             temperature = 0
             stop_sequence = "종료!"
@@ -100,7 +99,7 @@ class Summarizer:
             config = genai.GenerationConfig(
                 temperature=temperature, stop_sequences=[stop_sequence]
             )
-            time.sleep(1)  # might have to change according to the response
+            time.sleep(3)  # might have to change according to the response
             response = model.generate_content(contents=[text], generation_config=config)
             return response.text
         except Exception as e:

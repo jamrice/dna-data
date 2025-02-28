@@ -189,13 +189,13 @@ class UserInterest(Base):
     # user = relationship("User", back_populates="user_interests")
 
 
-class SimiilarityScore(Base):
+class SimilarityScore(Base):
     __tablename__ = "similarity_scores"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    source_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
-    target_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
     similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
     __table_args__ = (
-        UniqueConstraint("source_bill_no", "target_bill_no", name="uq_source_target"),
+        UniqueConstraint("source_bill_id", "target_bill_id", name="uq_source_target"),
     )
