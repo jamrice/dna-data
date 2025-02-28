@@ -6,7 +6,6 @@ import re
 from src.experiments.run_bill_recommendation import (
     extract_bills_id,
     extract_bills_summary,
-    translate_summaries,
 )
 import pandas as pd
 

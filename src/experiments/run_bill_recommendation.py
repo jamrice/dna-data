@@ -1,5 +1,5 @@
 from src.database import SessionLocal
-from src.models import Bill, BillRecommendation
+from src.models import Bill, SimilarityScore
 from src.dna_logger import logger
 from src.summary import Summarizer
 from src.db_handler import get_db_handler
