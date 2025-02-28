@@ -416,8 +416,9 @@ class BillExtractor:
             user (str): User name in database ex) root.
             password (str): Password for user.
         """
-        if self.bill_info["body"] == "":
-            self.bill_info["body"] = self.bill_info["title"]
+        # bill_summary가 공란이면 BILL_NM으로 대체
+        if self.bill_summary == "":
+            self.bill_summary = self.bill_info["BILL_NM"]
         params = {
             "bill_id": self.bill_info["BILL_ID"],
             "url": self.bill_info["LINK_URL"],
