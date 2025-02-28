@@ -28,6 +28,17 @@ class SimilarityScoreGenerator:
             translated_contents = []
 
             for bill in self.contents:
+                # Check if translations already exist in the database
+                existing_translation = self.db_handler.get_existing_translation(
+                    bill["bill_id"]
+                )
+                if existing_translation:
+                    translated_contents.append(existing_translation)
+                    logger.info(
+                        f"Skipped translation for bill {bill['bill_id']}, already exists."
+                    )
+                    continue  # Skip to the next bill if translation exists
+
                 success = False
                 attempts = 0
                 while not success and attempts < 3:  # Retry up to 3 times

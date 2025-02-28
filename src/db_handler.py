@@ -181,6 +181,20 @@ class DBHandler:
             self.db.rollback()  # Roll back the transaction on error
             logger.error(f"Error saving similarity score: {str(e)}")
 
+    def get_existing_translation(self, bill_id):
+        """Retrieve existing translation for a given bill_id from the database."""
+        query = text("SELECT title_eng, body_eng FROM bills WHERE bill_id = :bill_id")
+        print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
+        result = self.db.execute(query, {"bill_id": bill_id}).first()
+
+        if result:
+            return {
+                "id": bill_id,
+                "translated_bill_title": result.title_eng,
+                "translated_bill_summary": result.body_eng,
+            }
+        return None
+
 
 # Dependency for DB connection
 def get_db_handler():
