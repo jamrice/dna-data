@@ -26,7 +26,7 @@ def main(dae_num, date):
     conf = ConfExtractor(dae_num, date)
     print(conf.conf_info)
     if len(conf.conf_ids) == 0:
-        logger.info("info: The date is have no conf_id")
+        logger.info("info: No Conf on this date")
         return
     conf.save_conf("localhost", "root", api_keyManager.get_db_password())
     for link in conf.links:
@@ -43,5 +43,5 @@ def main(dae_num, date):
 
 
 if __name__ == "__main__":
-    for date in generate_date_list("2024-11-01", "2024-11-30"):
+    for date in generate_date_list("2025-01-01", "2025-01-31"):
         main("22", date)

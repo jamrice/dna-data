@@ -25,49 +25,60 @@ class SimilarityScoreGenerator:
                 logger.warning("No bills found in database")
                 return
 
-            # 영어로 번역된 요약을 저장할 리스트
             translated_contents = []
 
-            # 각 법안에 대해 요약을 영어로 번역
             for bill in self.contents:
-                summarizer = Summarizer(bill["bill_summary"])  # bill_content를 사용
-                translated_summary = summarizer.translate_to_english(
-                    bill["bill_summary"]
-                )
-                translated_title = summarizer.translate_to_english(
-                    bill["bill_title"]
-                )  # 제목 번역 추가
+                success = False
+                attempts = 0
+                while not success and attempts < 3:  # Retry up to 3 times
+                    try:
+                        summarizer = Summarizer(bill["bill_summary"])
+                        translated_summary = summarizer.translate_to_english(
+                            bill["bill_summary"]
+                        )
+                        translated_title = summarizer.translate_to_english(
+                            bill["bill_title"]
+                        )
 
-                # 번역된 요약이 None이 아닌 경우에만 추가
-                if translated_summary is not None:
-                    translated_contents.append(
-                        {
-                            "id": bill["bill_id"],
-                            "translated_bill_title": translated_title,
-                            "translated_bill_summary": translated_summary,
-                        }
-                    )
-                    logger.info(
-                        f"Translated content for bill {bill['bill_id']}: \n {translated_title} \n {translated_summary}"
-                    )
-                else:
-                    # 요약이 없을 경우 bill_title로 저장
-                    translated_contents.append(
-                        {
-                            "id": bill["bill_id"],
-                            "translated_bill_title": translated_title,
-                            "translated_bill_summary": translated_title,
-                        }
-                    )
-                    logger.warning(f"Translation failed for bill {bill['bill_id']}")
+                        if translated_summary is not None:
+                            translated_contents.append(
+                                {
+                                    "id": bill["bill_id"],
+                                    "translated_bill_title": translated_title,
+                                    "translated_bill_summary": translated_summary,
+                                }
+                            )
+                            # Save to bills model
+                            self.db_handler.save_bill_translation(
+                                bill["bill_id"], translated_title, translated_summary
+                            )
+                            logger.info(
+                                f"Translated content for bill {bill['bill_id']}: \n {translated_title} \n {translated_summary}"
+                            )
+                            success = True
+                        else:
+                            translated_contents.append(
+                                {
+                                    "id": bill["bill_id"],
+                                    "translated_bill_title": translated_title,
+                                    "translated_bill_summary": translated_title,
+                                }
+                            )
+                            logger.warning(
+                                f"Attempt {attempts+1}: Translation failed for bill {bill['bill_id']}"
+                            )
+                            attempts += 1  # Increment attempts on failure
+                    except Exception as e:
+                        logger.error(
+                            f"Attempt {attempts+1}: Error during translation for bill {bill['bill_id']}: {str(e)}"
+                        )
+                        attempts += 1  # Increment attempts on exception
 
-            # translated_summaries 가 없을 경우 return
             if not translated_contents:
                 logger.warning("No valid translated contents found.")
                 return
 
             self.translated_contents = translated_contents
-
             return self.translated_contents
 
         except Exception as e:

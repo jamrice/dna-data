@@ -64,6 +64,17 @@ class DBHandler:
         return bill
 
     @catch_sql_except
+    def save_bill_translation(self, bill_id, translated_title, translated_summary):
+        """법안의 영어 제목과 내용을 업데이트하는 함수"""
+        bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
+        if bill:
+            bill.title_eng = translated_title
+            bill.body_eng = translated_summary
+            self.db.commit()
+        else:
+            logger.warning(f"Bill with ID {bill_id} not found for translation update.")
+
+    @catch_sql_except
     def get_bill(self, bill_id: str):
         try:
             bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).one()
