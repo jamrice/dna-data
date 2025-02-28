@@ -43,5 +43,5 @@ def main(dae_num, date):
 
 
 if __name__ == "__main__":
-    for date in generate_date_list("2024-11-01", "2024-11-30"):
+    for date in generate_date_list("2025-01-01", "2025-02-28"):
         main("22", date)
