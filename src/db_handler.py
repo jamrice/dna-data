@@ -187,7 +187,9 @@ class DBHandler:
         print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
         result = self.db.execute(query, {"bill_id": bill_id}).first()
 
-        if result:
+        if result.body_eng is not None:
+            print("existing title translation: " + result.title_eng)
+            print("existing summary translation: " + result.body_eng)
             return {
                 "id": bill_id,
                 "translated_bill_title": result.title_eng,

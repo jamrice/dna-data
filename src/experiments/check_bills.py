@@ -10,8 +10,8 @@ def get_bills(bill_ids: list):
 
 if __name__ == "__main__":
     bill_ids = [
-        "PRC_V2R5L0V1K0Q8G1O3V4I4B0J2X0G1P6",
-        "PRC_D2A5C0V1A0G9Y1S1C3J7I1T6Z3C4M9",
+        "PRC_K2G5H0F2F1D3C1D0K1L1K0K3J5H5I4",
+        "PRC_P2O4N0O6J0I3H1F1O2P4N2M6S0R6Z6",
     ]
     results = get_bills(bill_ids)
     for i in results:
