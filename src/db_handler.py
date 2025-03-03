@@ -73,6 +73,18 @@ class DBHandler:
         self.db.add(billsEmbedding)
         self.db.commit()
 
+    @catch_sql_except    
+    def save_bill_translation(self, bill_id, translated_title, translated_summary):
+        """법안의 영어 제목과 내용을 업데이트하는 함수"""
+        bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
+        if bill:
+            bill.title_eng = translated_title
+            bill.body_eng = translated_summary
+            self.db.commit()
+        else:
+            logger.warning(f"Bill with ID {bill_id} not found for translation update.")
+
+
     @catch_sql_except
     def get_bill(self, bill_id: str):
         try:
@@ -161,7 +173,7 @@ class DBHandler:
     @catch_sql_except
     def save_similarity_score(self, target_bill_id, source_bill_id, similarity_score):
         try:
-            # If self.db is already a session, you don't need `.session` here
+            # 이미 있는 쌍에 대한 데이터면 새로운 데이터로 덮어쓰기
             existing_record = (
                 self.db.query(SimilarityScore)
                 .filter_by(source_bill_id=source_bill_id, target_bill_id=target_bill_id)
@@ -174,6 +186,7 @@ class DBHandler:
                 )
                 self.db.commit()  # Commit the transaction
             else:
+                # 없는 쌍에 대해서는 새로운 행을 추가
                 new_record = SimilarityScore(
                     source_bill_id=source_bill_id,
                     target_bill_id=target_bill_id,
@@ -184,6 +197,22 @@ class DBHandler:
         except Exception as e:
             self.db.rollback()  # Roll back the transaction on error
             logger.error(f"Error saving similarity score: {str(e)}")
+
+    def get_existing_translation(self, bill_id):
+        """Retrieve existing translation for a given bill_id from the database."""
+        query = text("SELECT title_eng, body_eng FROM bills WHERE bill_id = :bill_id")
+        print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
+        result = self.db.execute(query, {"bill_id": bill_id}).first()
+
+        if result.body_eng is not None:
+            print("existing title translation: " + result.title_eng)
+            print("existing summary translation: " + result.body_eng)
+            return {
+                "id": bill_id,
+                "translated_bill_title": result.title_eng,
+                "translated_bill_summary": result.body_eng,
+            }
+        return None
 
 
 # Dependency for DB connection

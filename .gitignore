@@ -1,5 +1,6 @@
 dna/
 test.py
+src/experiments/check_bills.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
