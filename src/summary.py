@@ -104,7 +104,7 @@ class Summarizer:
             return response.text
         except Exception as e:
             logger.error(
-                f"Error durint translation: {str(e)}. Try changing sleep duration."
+                f"Error during translation: {str(e)}. Try changing sleep duration."
             )
             return None
 
