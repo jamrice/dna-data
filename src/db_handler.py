@@ -157,7 +157,7 @@ class DBHandler:
     @catch_sql_except
     def save_similarity_score(self, target_bill_id, source_bill_id, similarity_score):
         try:
-            # If self.db is already a session, you don't need `.session` here
+            # 이미 있는 쌍에 대한 데이터면 새로운 데이터로 덮어쓰기
             existing_record = (
                 self.db.query(SimilarityScore)
                 .filter_by(source_bill_id=source_bill_id, target_bill_id=target_bill_id)
@@ -170,6 +170,7 @@ class DBHandler:
                 )
                 self.db.commit()  # Commit the transaction
             else:
+                # 없는 쌍에 대해서는 새로운 행을 추가
                 new_record = SimilarityScore(
                     source_bill_id=source_bill_id,
                     target_bill_id=target_bill_id,
