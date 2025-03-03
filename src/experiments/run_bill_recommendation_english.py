@@ -99,10 +99,28 @@ class SimilarityScoreGenerator:
     def generate_summary_similarity_score(self):
         """summary에 대한 similarity score 생성"""
         try:
+            # Filter out bills where translated_bill_title equals translated_bill_summary
+            valid_bills = [
+                bill
+                for bill in self.translated_contents
+                if bill["translated_bill_title"] != bill["translated_bill_summary"]
+            ]
+            # Log if no valid bills are found
+            if not valid_bills:
+                logger.warning("No valid bills found for similarity score calculation.")
+                return None  # Return None if no valid bills
+
             # TF-IDF 벡터라이저 설정
             tfidf_vectorizer = TfidfVectorizer(stop_words="english")
+            # bill_title과 bill_summary의 내용으로 코사인 유사도 추출
+            # 이후에 다른 내용이 추가될 수 있음
             tfidf_matrix = tfidf_vectorizer.fit_transform(
-                [bill["translated_bill_summary"] for bill in self.translated_contents]
+                [
+                    bill["translated_bill_title"]
+                    + " "
+                    + bill["translated_bill_summary"]
+                    for bill in valid_bills
+                ]
             )
 
             # 코사인 유사도 계산
@@ -110,13 +128,11 @@ class SimilarityScoreGenerator:
             cosine_sim_df = pd.DataFrame(cosine_sim)
 
             # 추천 결과 생성 및 DB에 저장
-            for idx, bill in enumerate(self.translated_contents):
+            for idx, bill in enumerate(valid_bills):
                 source_bill_id = bill["id"]  # 현재 법안의 ID를 source_bill_id로 설정
-                for sim_idx in range(
-                    len(self.translated_contents)
-                ):  # 모든 법안에 대해 반복
+                for sim_idx in range(len(valid_bills)):  # 모든 법안에 대해 반복
                     if sim_idx != idx:  # 자기 자신 제외
-                        target_bill_id = self.translated_contents[sim_idx]["id"]
+                        target_bill_id = valid_bills[sim_idx]["id"]
                         similarity_score = cosine_sim[idx][sim_idx]
                         self.db_handler.save_similarity_score(
                             target_bill_id, source_bill_id, similarity_score
@@ -128,6 +144,7 @@ class SimilarityScoreGenerator:
             logger.error(f"Error in recommendation generation process: {str(e)}")
             raise
 
+    # this function is deprecated the recommendation algorithm above will take into account all features available
     def generate_others_similarity_score(self):
         """summary 제외 내용들에 대한 similarity score 생성"""
         try:
@@ -169,5 +186,3 @@ if __name__ == "__main__":
     print("t_contents: ", t_contents)
     summary_cosine_sim_df = ssg.generate_summary_similarity_score()
     print("summary df:\n", summary_cosine_sim_df)
-    other_cosine_sim_df = ssg.generate_others_similarity_score()
-    print("other df:\n", other_cosine_sim_df)
