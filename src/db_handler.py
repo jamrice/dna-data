@@ -6,6 +6,7 @@ from src.database import get_db
 from src.models import (
     Bill,
     BillSummary,
+    BillsEmbedding,
     SimilarityScore,
     Conf,
 )  # Bill 모델 클래스 정의가 필요합니다
@@ -64,12 +65,26 @@ class DBHandler:
         return bill
 
     @catch_sql_except
+    def save_embedding(self, params):
+        billsEmbedding = BillsEmbedding(
+            bill_id=params["bill_id"],
+            embedding=params["embedding"],
+        )
+        self.db.add(billsEmbedding)
+        self.db.commit()
+
+    @catch_sql_except
     def get_bill(self, bill_id: str):
         try:
             bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).one()
             return bill
         except NoResultFound:
             return logger.info("Bill not found")
+
+    @catch_sql_except
+    def get_all_bills(self):
+        bills = self.db.query(Bill).all()
+        return bills
 
     @catch_sql_except
     def del_bill(self, bill_id):

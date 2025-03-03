@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
+    LargeBinary,
     String,
     Integer,
     Text,
@@ -86,8 +87,26 @@ class Bill(Base):
         String(500), nullable=True
     )  # 추가된 필드
 
-    # Relationship with BillSummaryRelation and BillSummaryㅂ
+    # Relationship with BillSummaryRelation and BillSummary
     # summaries = relationship("BillSummary", back_populates="bill", cascade="all, delete-orphan")
+
+
+class BillsSimilarity(Base):
+    __tablename__ = "bills_similarity"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    similarity_bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    __table_args__ = (UniqueConstraint("bill_id", "similarity_bill_id"),)
+    similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
+
+
+class BillsEmbedding(Base):
+    __tablename__ = "bills_embedding"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bill_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("bills.bill_id"), nullable=False
+    )
+    embedding: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
 
 class BillSummary(Base):
