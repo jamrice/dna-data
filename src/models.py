@@ -91,6 +91,18 @@ class Bill(Base):
     # summaries = relationship("BillSummary", back_populates="bill", cascade="all, delete-orphan")
 
 
+class UserPageVisit(Base):
+    __tablename__ = "user_page_visits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_id: Mapped[str] = mapped_column(Text, nullable=False)
+    visit_time: Mapped[int] = mapped_column(Integer, nullable=False)
+    visited_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
+
+
 class BillsSimilarity(Base):
     __tablename__ = "bills_similarity"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
