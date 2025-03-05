@@ -448,8 +448,8 @@ class BillExtractor:
 
 class All_BillIdsExtractor:
     def __init__(self, host, user, password):
-        self.results = db_handler.get_all_value_table("bill_summary", "bill_id")
-        print(db_handler.get_all_value_table("bill_summary", "bill_id"))
+        self.results = db_handler.get_all_value_tables("bill_summary", "bill_id")
+        print(db_handler.get_all_value_tables("bill_summary", "bill_id"))
         logger.debug("All_BillIdsExtractor get:" + str(len(self.results)))
 
 
@@ -459,7 +459,7 @@ class All_KeywordExtractor:
         keylist = ["keyword1", "keyword2", "keyword3"]
         for column in keylist:
             table = "bill"
-            results = db_handler.get_all_value_table(table, column)
+            results = db_handler.get_all_value_tables(table, column)
             if not results is None:
                 self.results += [reulst[0] for reulst in results]
         self.results = list(set(self.results))
@@ -507,7 +507,7 @@ class KeywordExtractor:
             "keyword3",
         ]
         for index, set_column in enumerate(set_columns):
-            db_handler.update_value(
+            db_handler.update_bill_value(
                 table, column, self.bill_id, set_column, self.get_keywords[index]
             )
 

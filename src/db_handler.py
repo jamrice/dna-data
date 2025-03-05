@@ -105,7 +105,7 @@ class DBHandler:
             self.db.commit()
 
     @catch_sql_except
-    def get_all_value_table(self):
+    def get_all_value_tables(self):
         results = self.db.query(Bill).all()
         logger.debug(f"Findings number: {len(results)}")
         return results
@@ -116,7 +116,7 @@ class DBHandler:
         return result
 
     @catch_sql_except
-    def update_value(self, bill_id, set_column, set_value):
+    def update_bill_value(self, bill_id, set_column, set_value):
         bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
         if bill:
             setattr(bill, set_column, set_value)
@@ -188,7 +188,6 @@ class DBHandler:
     @catch_sql_except
     def get_summary(self, bill_id):
         """주어진 bill_id에 대한 summary를 읽어오는 함수"""
-        logger.error("")
         try:
             result = self.db.query(
                 text("SELECT * FROM bill_summaries WHERE bill_id = :bill_id"),

@@ -32,11 +32,11 @@ def sample_bill_params():
 
 
 @pytest.fixture
-def before_clean_bill(db_handler, sample_bill_params):
+def before_clean_bill(db_handler: DBHandler, sample_bill_params):
     db_handler.del_bill(sample_bill_params["bill_id"])
 
 
-def test_save_bill(db_handler, sample_bill_params):
+def test_save_bill(db_handler: DBHandler, sample_bill_params):
     if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
         db_handler.del_bill(sample_bill_params["bill_id"])
 
@@ -54,7 +54,7 @@ def test_save_bill(db_handler, sample_bill_params):
     assert bill.ord_num == int(sample_bill_params["ord_num"])
 
 
-def test_get_bill(db_handler, sample_bill_params):
+def test_get_bill(db_handler: DBHandler, sample_bill_params):
     if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
         db_handler.del_bill(sample_bill_params["bill_id"])
     # Given
@@ -68,7 +68,7 @@ def test_get_bill(db_handler, sample_bill_params):
     assert retrieved_bill.title == saved_bill.title
 
 
-def test_get_nonexistent_bill(db_handler):
+def test_get_nonexistent_bill(db_handler: DBHandler):
     # When
     result = db_handler.get_bill("nonexistent_id")
 
@@ -76,34 +76,21 @@ def test_get_nonexistent_bill(db_handler):
     assert result is None
 
 
-def test_del_bill(db_handler, sample_bill_params):
+def test_read_all_value_table(db_handler: DBHandler, sample_bill_params):
     if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
         db_handler.del_bill(sample_bill_params["bill_id"])
     # Given
     db_handler.save_bill(sample_bill_params)
 
     # When
-    db_handler.del_bill(sample_bill_params["bill_id"])
-
-    # Then
-    assert db_handler.get_bill(sample_bill_params["bill_id"]) is None
-
-
-def test_read_all_value_table(db_handler, sample_bill_params):
-    if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
-        db_handler.del_bill(sample_bill_params["bill_id"])
-    # Given
-    db_handler.save_bill(sample_bill_params)
-
-    # When
-    results = db_handler.get_all_value_table()
+    results = db_handler.get_all_value_tables()
 
     # Then
     assert len(results) > 0
     assert isinstance(results[0], Bill)
 
 
-def test_read_value_table(db_handler, sample_bill_params):
+def test_read_value_table(db_handler: DBHandler, sample_bill_params):
     if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
         db_handler.del_bill(sample_bill_params["bill_id"])
     # Given
@@ -116,7 +103,7 @@ def test_read_value_table(db_handler, sample_bill_params):
     assert result.bill_id == saved_bill.bill_id
 
 
-def test_update_value(db_handler, sample_bill_params):
+def test_update_value(db_handler: DBHandler, sample_bill_params):
     if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
         db_handler.del_bill(sample_bill_params["bill_id"])
     # Given
@@ -124,8 +111,21 @@ def test_update_value(db_handler, sample_bill_params):
     new_title = "Updated Title"
 
     # When
-    db_handler.update_value(sample_bill_params["bill_id"], "title", new_title)
+    db_handler.update_bill_value(sample_bill_params["bill_id"], "title", new_title)
 
     # Then
     updated_bill = db_handler.get_bill(sample_bill_params["bill_id"])
     assert updated_bill.title == new_title
+
+
+def test_del_bill(db_handler: DBHandler, sample_bill_params):
+    if db_handler.check_bill_exists(sample_bill_params["bill_id"]):
+        db_handler.del_bill(sample_bill_params["bill_id"])
+    # Given
+    db_handler.save_bill(sample_bill_params)
+
+    # When
+    db_handler.del_bill(sample_bill_params["bill_id"])
+
+    # Then
+    assert db_handler.get_bill(sample_bill_params["bill_id"]) is None
