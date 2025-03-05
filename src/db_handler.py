@@ -26,13 +26,6 @@ class DBHandler:
     def __init__(self, db_session: Session):
         self.db = db_session
 
-    # functions regarding bills
-    @catch_sql_except
-    def check_bill_exists(self, bill_id) -> bool:
-        """주어진 bill_id에 해당하는 법안이 존재하는지 확인하는 함수"""
-        bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
-        return bill is not None
-
     @catch_sql_except
     def save_conf(self, params):
         conf = Conf(
@@ -47,6 +40,22 @@ class DBHandler:
         self.db.add(conf)
         self.db.commit()
         return conf
+
+    @catch_sql_except
+    def save_embedding(self, params):
+        billsEmbedding = BillsEmbedding(
+            bill_id=params["bill_id"],
+            embedding=params["embedding"],
+        )
+        self.db.add(billsEmbedding)
+        self.db.commit()
+
+    # functions regarding bills
+    @catch_sql_except
+    def check_bill_exists(self, bill_id) -> bool:
+        """주어진 bill_id에 해당하는 법안이 존재하는지 확인하는 함수"""
+        bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
+        return bill is not None
 
     @catch_sql_except
     def save_bill(self, params):
@@ -65,15 +74,6 @@ class DBHandler:
         return bill
 
     @catch_sql_except
-    def save_embedding(self, params):
-        billsEmbedding = BillsEmbedding(
-            bill_id=params["bill_id"],
-            embedding=params["embedding"],
-        )
-        self.db.add(billsEmbedding)
-        self.db.commit()
-
-    @catch_sql_except    
     def save_bill_translation(self, bill_id, translated_title, translated_summary):
         """법안의 영어 제목과 내용을 업데이트하는 함수"""
         bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
@@ -83,7 +83,6 @@ class DBHandler:
             self.db.commit()
         else:
             logger.warning(f"Bill with ID {bill_id} not found for translation update.")
-
 
     @catch_sql_except
     def get_bill(self, bill_id: str):
@@ -106,13 +105,13 @@ class DBHandler:
             self.db.commit()
 
     @catch_sql_except
-    def read_all_value_table(self):
+    def get_all_value_table(self):
         results = self.db.query(Bill).all()
         logger.debug(f"Findings number: {len(results)}")
         return results
 
     @catch_sql_except
-    def read_value_table(self, bill_id):
+    def get_value_table(self, bill_id):
         result = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
         return result
 
@@ -125,7 +124,7 @@ class DBHandler:
 
     # 만약 코사인 유사도 계산에 추가적인 정보를 사용한다면 이 함수에서 return해줄 필요가 있음.
     @catch_sql_except
-    def extract_bills_content(self):
+    def get_bills_content(self):
         """bills 테이블에서 모든 content를 추출하는 함수"""
         try:
             # 모든 법안의 summary를 가져옴
@@ -144,6 +143,22 @@ class DBHandler:
         finally:
             self.db.close()
 
+    def get_existing_translation(self, bill_id):
+        """Retrieve existing translation for a given bill_id from the database."""
+        query = text("SELECT title_eng, body_eng FROM bills WHERE bill_id = :bill_id")
+        print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
+        result = self.db.execute(query, {"bill_id": bill_id}).first()
+
+        if result.body_eng is not None:
+            print("existing title translation: " + result.title_eng)
+            print("existing summary translation: " + result.body_eng)
+            return {
+                "id": bill_id,
+                "translated_bill_title": result.title_eng,
+                "translated_bill_summary": result.body_eng,
+            }
+        return None
+
     # functions regarding summaries
     @catch_sql_except
     def save_summary(self, summarizer):
@@ -158,8 +173,22 @@ class DBHandler:
         return summary
 
     @catch_sql_except
-    def read_summary(self, bill_id):
+    def get_all_summaries(self, bill_id):
         """주어진 bill_id에 대한 summary를 읽어오는 함수"""
+        try:
+            result = self.db.query(
+                text("SELECT * FROM bill_summaries WHERE bill_id = :bill_id"),
+                {"bill_id": bill_id},
+            ).first()
+            return result
+        except Exception as e:
+            logger.error(f"Error reading summary: {str(e)}")
+            return None
+
+    @catch_sql_except
+    def get_summary(self, bill_id):
+        """주어진 bill_id에 대한 summary를 읽어오는 함수"""
+        logger.error("")
         try:
             result = self.db.query(
                 text("SELECT * FROM bill_summaries WHERE bill_id = :bill_id"),
@@ -197,22 +226,6 @@ class DBHandler:
         except Exception as e:
             self.db.rollback()  # Roll back the transaction on error
             logger.error(f"Error saving similarity score: {str(e)}")
-
-    def get_existing_translation(self, bill_id):
-        """Retrieve existing translation for a given bill_id from the database."""
-        query = text("SELECT title_eng, body_eng FROM bills WHERE bill_id = :bill_id")
-        print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
-        result = self.db.execute(query, {"bill_id": bill_id}).first()
-
-        if result.body_eng is not None:
-            print("existing title translation: " + result.title_eng)
-            print("existing summary translation: " + result.body_eng)
-            return {
-                "id": bill_id,
-                "translated_bill_title": result.title_eng,
-                "translated_bill_summary": result.body_eng,
-            }
-        return None
 
 
 # Dependency for DB connection

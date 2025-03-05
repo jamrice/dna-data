@@ -15,7 +15,7 @@ class SimilarityScoreGenerator:
         self.translated_contents = []
 
     def get_contents(self):
-        contents = self.db_handler.extract_bills_content()
+        contents = self.db_handler.get_bills_content()
         self.contents = [content for content in contents if content is not None]
         return self.contents
 

@@ -96,7 +96,7 @@ def test_read_all_value_table(db_handler, sample_bill_params):
     db_handler.save_bill(sample_bill_params)
 
     # When
-    results = db_handler.read_all_value_table()
+    results = db_handler.get_all_value_table()
 
     # Then
     assert len(results) > 0
@@ -110,7 +110,7 @@ def test_read_value_table(db_handler, sample_bill_params):
     saved_bill = db_handler.save_bill(sample_bill_params)
 
     # When
-    result = db_handler.read_value_table(sample_bill_params["bill_id"])
+    result = db_handler.get_value_table(sample_bill_params["bill_id"])
 
     # Then
     assert result.bill_id == saved_bill.bill_id
