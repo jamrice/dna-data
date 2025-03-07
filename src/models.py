@@ -102,18 +102,19 @@ class UserPageVisit(Base):
         DateTime, nullable=False, default=datetime.now
     )
 
-
-class BillsSimilarity(Base):
-    __tablename__ = "bills_similarity"
+class UserContentMetric(Base):
+    __tablename__ = "user_content_metrics"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    similarity_bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    __table_args__ = (UniqueConstraint("bill_id", "similarity_bill_id"),)
-    similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
-
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    metric_score: Mapped[float] = mapped_column(Float, nullable=False)
+    update_date: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
+    __table_args__ = (UniqueConstraint("user_id", "content_id"),)
 
 class BillsEmbedding(Base):
-    __tablename__ = "bills_embedding"
+    __tablename__ = "bills_embedding"   
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     bill_id: Mapped[str] = mapped_column(
         String(255), ForeignKey("bills.bill_id"), nullable=False
