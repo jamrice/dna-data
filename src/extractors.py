@@ -309,6 +309,7 @@ class BillExtractor:
             }
 
             self.bill_info = bill_info
+            self._save()
             return bill_info
 
         except ET.ParseError as e:
@@ -407,7 +408,7 @@ class BillExtractor:
         # Return both the bill number and the PDF URL
         return bill_no, self.pdf_url
 
-    def save_bill(self, host, user, password):
+    def _save(self):
         """
         Save to Database.
 
@@ -431,11 +432,24 @@ class BillExtractor:
         }
         db_handler.save_bill(params=params)
 
+    def save_bill(self):
+        """
+        Save to Database.
+
+        Parameters:
+            host (str): Database host ip ex) localhost.
+            user (str): User name in database ex) root.
+            password (str): Password for user.
+        """
+        logger.error("save_bill function is deprecated. Use save instead.")
+        # bill_summary가 공란이면 BILL_NM으로 대체
+        self._save()
+
 
 class All_BillIdsExtractor:
     def __init__(self, host, user, password):
-        self.results = db_handler.read_all_value_table("bill_summary", "bill_id")
-        print(db_handler.read_all_value_table("bill_summary", "bill_id"))
+        self.results = db_handler.get_all_value_tables("bill_summary", "bill_id")
+        print(db_handler.get_all_value_tables("bill_summary", "bill_id"))
         logger.debug("All_BillIdsExtractor get:" + str(len(self.results)))
 
 
@@ -445,7 +459,7 @@ class All_KeywordExtractor:
         keylist = ["keyword1", "keyword2", "keyword3"]
         for column in keylist:
             table = "bill"
-            results = db_handler.read_all_value_table(table, column)
+            results = db_handler.get_all_value_tables(table, column)
             if not results is None:
                 self.results += [reulst[0] for reulst in results]
         self.results = list(set(self.results))
@@ -456,7 +470,7 @@ class KeywordExtractor:
         self.bill_id = bill_id
 
         table = "bill_summary"
-        result = db_handler.read_value_table(table, "bill_id", bill_id)
+        result = db_handler.get_value_table(table, "bill_id", bill_id)
         self.headline = result[1]
         self.sumary = result[2]
 
@@ -493,7 +507,7 @@ class KeywordExtractor:
             "keyword3",
         ]
         for index, set_column in enumerate(set_columns):
-            db_handler.update_value(
+            db_handler.update_bill_value(
                 table, column, self.bill_id, set_column, self.get_keywords[index]
             )
 
