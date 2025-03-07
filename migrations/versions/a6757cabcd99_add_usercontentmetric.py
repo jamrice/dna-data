@@ -31,7 +31,6 @@ def upgrade() -> None:
     )
     op.drop_index('uq_bills_similarity_bill_id', table_name='bills_similarity')
     op.drop_table('bills_similarity')
-    op.drop_index('fk_bills_embedding_bills_embedding_bill_id_bills', table_name='bills_embedding')
     op.create_foreign_key(op.f('fk_bills_embedding_bills_embedding_bill_id_bills'), 'bills_embedding', 'bills', ['bill_id'], ['bill_id'])
     # ### end Alembic commands ###
 
