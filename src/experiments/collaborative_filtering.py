@@ -1,23 +1,34 @@
 import numpy as np
 import pandas as pd
-
+from datetime import datetime
 from src.dna_logger import logger
 from src.db_handler import get_db_handler
 from sqlalchemy import text
-
 from sklearn.metrics.pairwise import cosine_similarity
 
 
 class CollaborativeFiltering:
-
     def __init__(self, user_id):
         self.db_handler = get_db_handler()
         self.cosine_sim_matrix = self.generate_similarity_score()
         self.bills = self.collaborative_filtering_recommendation(user_id)
 
-    # some function to deal with time decomposing for metric_score
-    def time_decomposing(self):
-        pass
+    def time_decomposing(self, metrics, decay_factor=0.01):
+        """Apply exponential time decay to metric scores."""
+        # Assume `update_time` is in a standard datetime format
+        current_time = datetime.now()
+
+        # Calculate the time difference in days and apply exponential decay
+        metrics["time_diff"] = (
+            current_time - pd.to_datetime(metrics["update_date"])
+        ).dt.total_seconds() / (60 * 60 * 24)
+
+        # Apply the decay to the metric score
+        metrics["decayed_score"] = metrics["metric_score"] * np.exp(
+            -decay_factor * metrics["time_diff"]
+        )
+
+        return metrics
 
     def generate_similarity_score(self):
         # Retrieve the user-bill score data from the database
@@ -27,10 +38,13 @@ class CollaborativeFiltering:
             .drop_duplicates(subset="id")
             .set_index("id")
         )
-        self.time_decomposing()
-        # Create the user-item matrix
+
+        # Apply time decay to the metric scores
+        metrics = self.time_decomposing(metrics)
+
+        # Create the user-item matrix using the decayed score
         self.user_item_matrix = metrics.pivot_table(
-            index="user_id", columns="content_id", values="metric_score"
+            index="user_id", columns="content_id", values="decayed_score"
         ).fillna(0)
 
         # Compute the cosine similarity matrix
@@ -61,4 +75,5 @@ class CollaborativeFiltering:
 
 if __name__ == "__main__":
     cf = CollaborativeFiltering(1)
+    print(cf.user_item_matrix)
     print(cf.bills)
