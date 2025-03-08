@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-class SimilarityScoreGenerator:
+class ContentsFiltering:
 
     def __init__(self):
         self.db_handler = get_db_handler()
@@ -179,10 +179,10 @@ class SimilarityScoreGenerator:
 
 
 if __name__ == "__main__":
-    ssg = SimilarityScoreGenerator()
-    contents = ssg.get_contents()
+    cf = ContentsFiltering()
+    contents = cf.get_contents()
     print("contents: ", contents)
-    t_contents = ssg.translate_content()
+    t_contents = cf.translate_content()
     print("t_contents: ", t_contents)
-    summary_cosine_sim_df = ssg.generate_summary_similarity_score()
+    summary_cosine_sim_df = cf.generate_summary_similarity_score()
     print("summary df:\n", summary_cosine_sim_df)
