@@ -102,6 +102,7 @@ class UserPageVisit(Base):
         DateTime, nullable=False, default=datetime.now
     )
 
+
 class UserContentMetric(Base):
     __tablename__ = "user_content_metrics"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -113,8 +114,9 @@ class UserContentMetric(Base):
     )
     __table_args__ = (UniqueConstraint("user_id", "content_id"),)
 
+
 class BillsEmbedding(Base):
-    __tablename__ = "bills_embedding"   
+    __tablename__ = "bills_embedding"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     bill_id: Mapped[str] = mapped_column(
         String(255), ForeignKey("bills.bill_id"), nullable=False
