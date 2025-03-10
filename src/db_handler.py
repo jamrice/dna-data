@@ -17,15 +17,13 @@ def catch_sql_except(func):
         try:
             return func(*args, **kwargs)
         except SQLAlchemyError as err:
+            args[0].db.rollback()
             logger.error(f"error: SQLAlchemy error occurred {err}")
-
     return wrapper
-
 
 class DBHandler:
     def __init__(self, db_session: Session):
         self.db = db_session
-
     @catch_sql_except
     def save_conf(self, params):
         conf = Conf(
@@ -69,8 +67,11 @@ class DBHandler:
             date=params["date"],
             ord_num=params["ord_num"],
         )
-        self.db.add(bill)
-        self.db.commit()
+        if not self.check_bill_exists(bill.bill_id) :
+            print("save_bill = bill_id: ", bill.bill_id)
+            self.db.add(bill)
+            print("save_bill: ", bill)
+            self.db.commit()
         return bill
 
     @catch_sql_except

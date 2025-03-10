@@ -29,11 +29,12 @@ def main(dae_num, date):
         logger.info("info: No Conf on this date")
         return
     conf.save_conf("localhost", "root", api_keyManager.get_db_password())
+    print("conf.links: ", conf.links)
     for link in conf.links:
-        print(link)
+        print("link: ", link)
         bill = BillExtractor(link)
-        print(bill.bill_info)
-        bill.save_bill("localhost", "root", api_keyManager.get_db_password())
+        print("bill.bill_info: ", bill.bill_info)
+        # bill.save_bill("localhost", "root", api_keyManager.get_db_password())
         # su = Summarizer(bill.bill_summary)
         # su.bill_id = bill.get_bill_id()
         # su.conf_id = conf.get_conf_id()
@@ -43,5 +44,5 @@ def main(dae_num, date):
 
 
 if __name__ == "__main__":
-    for date in generate_date_list("2025-01-01", "2025-01-31"):
+    for date in generate_date_list("2024-06-01", "2025-03-9"):
         main("22", date)
