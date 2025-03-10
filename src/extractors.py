@@ -36,6 +36,7 @@ class ConfExtractor:
         self.get_conf_info(dae_num, date)  # Fetch the first conference entry
 
         if self.conf_ids:
+            print("conf_ids: ", self.conf_ids)
             self.get_link_from_conf_id(self.conf_ids[0])
 
     def get_conf_info(
@@ -307,9 +308,10 @@ class BillExtractor:
                 "RGS_CONF_RSLT": root.find(".//RGS_CONF_RSLT").text,
                 "LINK_URL": root.find(".//LINK_URL").text,
             }
-
+            print("get_bill_info = bill_id: ", bill_info["BILL_ID"])
             self.bill_info = bill_info
             self._save()
+            print("after get_bill_info = bill_id: ", bill_info["BILL_ID"])
             return bill_info
 
         except ET.ParseError as e:
@@ -346,7 +348,7 @@ class BillExtractor:
         try:
             return self.bill_soup.find("div", {"id": "summaryContentDiv"}).text.strip()
         except Exception as e:
-            logger.error(f"Error: This bill url does not contain summary - {str(e)}")
+            logger.info(f"info: This bill url does not contain summary - {str(e)}")
             return ""
 
     def get_bill_no_pdf_url(self) -> tuple:
@@ -430,6 +432,7 @@ class BillExtractor:
             "date": self.bill_info["PPSL_DT"],
             "ord_num": self.bill_info["BILL_NO"][:2],
         }
+        print("_save = bill_id: ", params["bill_id"])
         db_handler.save_bill(params=params)
 
     def save_bill(self):
