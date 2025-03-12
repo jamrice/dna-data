@@ -19,11 +19,14 @@ def catch_sql_except(func):
         except SQLAlchemyError as err:
             args[0].db.rollback()
             logger.error(f"error: SQLAlchemy error occurred {err}")
+
     return wrapper
+
 
 class DBHandler:
     def __init__(self, db_session: Session):
         self.db = db_session
+
     @catch_sql_except
     def save_conf(self, params):
         conf = Conf(
@@ -59,15 +62,19 @@ class DBHandler:
     def save_bill(self, params):
         bill = Bill(
             bill_id=params["bill_id"],
-            url=params["url"],
-            num=params["num"],
-            title=params["title"],
-            body=params["body"],
-            pdf_url=params["pdf_url"],
-            date=params["date"],
+            bill_no=params["bill_no"],
+            bill_title=params["bill_title"],
+            bill_body=params["bill_body"],
+            ppsr_name=params["ppsr_name"],
+            ppsl_date=params["ppsl_date"],
+            jrcmit_name=params["jrcmit_name"],
+            rgs_rsln_date=params["rgs_rsln_date"],
+            rgs_rsln_rslt=params["rgs_rsln_rslt"],
             ord_num=params["ord_num"],
+            bill_url=params["bill_url"],
+            pdf_url=params["pdf_url"],
         )
-        if not self.check_bill_exists(bill.bill_id) :
+        if not self.check_bill_exists(bill.bill_id):
             print("save_bill = bill_id: ", bill.bill_id)
             self.db.add(bill)
             print("save_bill: ", bill)
@@ -79,8 +86,8 @@ class DBHandler:
         """법안의 영어 제목과 내용을 업데이트하는 함수"""
         bill = self.db.query(Bill).filter(Bill.bill_id == bill_id).first()
         if bill:
-            bill.title_eng = translated_title
-            bill.body_eng = translated_summary
+            bill.bill_title_eng = translated_title
+            bill.bill_body_eng = translated_summary
             self.db.commit()
         else:
             logger.warning(f"Bill with ID {bill_id} not found for translation update.")
@@ -133,8 +140,8 @@ class DBHandler:
             return [
                 {
                     "bill_id": bill.bill_id,
-                    "bill_title": bill.title,
-                    "bill_summary": bill.body,
+                    "bill_title": bill.bill_title,
+                    "bill_summary": bill.bill_body,
                 }
                 for bill in summaries
             ]  # 딕셔너리 리스트로 변환
@@ -150,13 +157,13 @@ class DBHandler:
         print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
         result = self.db.execute(query, {"bill_id": bill_id}).first()
 
-        if result.body_eng is not None:
-            print("existing title translation: " + result.title_eng)
-            print("existing summary translation: " + result.body_eng)
+        if result.bill_body_eng is not None:
+            print("existing title translation: " + result.bill_title_eng)
+            print("existing summary translation: " + result.bill_body_eng)
             return {
                 "id": bill_id,
-                "translated_bill_title": result.title_eng,
-                "translated_bill_summary": result.body_eng,
+                "translated_bill_title": result.bill_title_eng,
+                "translated_bill_summary": result.bill_body_eng,
             }
         return None
 

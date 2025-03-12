@@ -304,7 +304,10 @@ class BillExtractor:
                 "BILL_NO": root.find(".//BILL_NO").text,
                 "BILL_ID": root.find(".//BILL_ID").text,
                 "BILL_NM": root.find(".//BILL_NM").text,
+                "PPSR_NM": root.find(".//PPSR_NM").text,
                 "PPSL_DT": root.find(".//PPSL_DT").text,
+                "JRCMIT_NM": root.find(".//JRCMIT_NM").text,
+                "RGS_RSLN_DT": root.find(".//RGS_RSLN_DT").text,
                 "RGS_CONF_RSLT": root.find(".//RGS_CONF_RSLT").text,
                 "LINK_URL": root.find(".//LINK_URL").text,
             }
@@ -424,13 +427,17 @@ class BillExtractor:
             self.bill_summary = self.bill_info["BILL_NM"]
         params = {
             "bill_id": self.bill_info["BILL_ID"],
-            "url": self.bill_info["LINK_URL"],
-            "num": self.bill_info["BILL_NO"],
-            "title": self.bill_info["BILL_NM"],
-            "body": self.bill_summary,
-            "pdf_url": self.pdf_url,
-            "date": self.bill_info["PPSL_DT"],
+            "bill_no": self.bill_info["BILL_NO"],
+            "bill_title": self.bill_info["BILL_NM"],
+            "bill_body": self.bill_summary,
+            "ppsr_name": self.bill_info["PPSR_NM"],
+            "ppsl_date": self.bill_info["PPSL_DT"],
+            "jrcmit_name": self.bill_info["JRCMIT_NM"],
+            "rgs_rsln_date": self.bill_info["RGS_RSLN_DT"],
+            "rgs_rsln_rslt": self.bill_info["RGS_CONF_RSLT"],
             "ord_num": self.bill_info["BILL_NO"][:2],
+            "bill_url": self.bill_info["LINK_URL"],
+            "pdf_url": self.pdf_url,
         }
         print("_save = bill_id: ", params["bill_id"])
         db_handler.save_bill(params=params)
