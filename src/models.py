@@ -67,14 +67,16 @@ class Bill(Base):
     bill_id: Mapped[Optional[str]] = mapped_column(
         String(255), unique=True, nullable=True
     )
-    url: Mapped[str] = mapped_column(String(500), nullable=False)
-    num: Mapped[int] = mapped_column(Integer, nullable=False)
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    title_eng: Mapped[str] = mapped_column(String(255), nullable=True)
-    body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    body_eng: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    bill_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    bill_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    bill_title_eng: Mapped[str] = mapped_column(String(255), nullable=True)
+    bill_body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    bill_body_eng: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ppsr_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    ppsl_date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    jrcmit_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    rgs_rsln_date: Mapped[datetime] = mapped_column(Date, nullable=True)
+    rgs_rsln_rslt: Mapped[str] = mapped_column(String(100), nullable=True)
     ord_num: Mapped[int] = mapped_column(Integer, nullable=False)
     category: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     keyword1: Mapped[Optional[str]] = mapped_column(
@@ -86,6 +88,8 @@ class Bill(Base):
     keyword3: Mapped[Optional[str]] = mapped_column(
         String(500), nullable=True
     )  # 추가된 필드
+    bill_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     # Relationship with BillSummaryRelation and BillSummary
     # summaries = relationship("BillSummary", back_populates="bill", cascade="all, delete-orphan")
