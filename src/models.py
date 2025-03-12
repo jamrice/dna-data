@@ -239,3 +239,11 @@ class SimilarityScore(Base):
     __table_args__ = (
         UniqueConstraint("source_bill_id", "target_bill_id", name="uq_source_target"),
     )
+
+
+class DateChecker(Base):
+    __tablename__ = "date_checker"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    content_date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    execute_date: Mapped[datetime] = mapped_column(Date, nullable=False)
