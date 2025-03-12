@@ -99,7 +99,7 @@ class Summarizer:
             config = genai.GenerationConfig(
                 temperature=temperature, stop_sequences=[stop_sequence]
             )
-            time.sleep(3)  # might have to change according to the response
+            time.sleep(4)  # might have to change according to the response
             response = model.generate_content(contents=[text], generation_config=config)
             return response.text
         except Exception as e:

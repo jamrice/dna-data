@@ -153,7 +153,9 @@ class DBHandler:
 
     def get_existing_translation(self, bill_id):
         """Retrieve existing translation for a given bill_id from the database."""
-        query = text("SELECT title_eng, body_eng FROM bills WHERE bill_id = :bill_id")
+        query = text(
+            "SELECT bill_title_eng, bill_body_eng FROM bills WHERE bill_id = :bill_id"
+        )
         print(f"Executing query: {query} with parameters: {bill_id}")  # Debugging line
         result = self.db.execute(query, {"bill_id": bill_id}).first()
 
