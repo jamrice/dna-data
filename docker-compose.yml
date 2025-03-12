@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0  # MySQL 최신 버전
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # 루트 계정 비밀번호
+      MYSQL_DATABASE: congress_db  # 생성할 DB 이름
+      MYSQL_USER: myuser  # 사용자 계정 이름
+      MYSQL_PASSWORD: mypassword  # 사용자 비밀번호
+    ports:
+      - "3306:3306"  # MySQL 기본 포트
+    volumes:
+      - db_data:/var/lib/mysql  # DB 데이터 유지
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build: .
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy  # MySQL이 실행된 후 시작
+    environment:
+      DATABASE_URL: mysql+pymysql://myuser:mypassword@db:3306/congress_db  # MySQL 연결 주소
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:
