@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime
 from src.dna_logger import logger
 from src.db_handler import get_db_handler
 from sqlalchemy import text
@@ -48,7 +47,7 @@ class CollaborativeFiltering:
     def RMSE(self, y_true, y_pred):
         return np.sqrt(np.mean((np.array(y_true) - np.array(y_pred)) ** 2))
 
-    def score(self, model: function):
+    def score(self, model):
         id_pairs = zip(self.x_test["user_id"], self.x_test["content_id"])
         y_pred = np.array([model(user, content) for (user, content) in id_pairs])
         y_true = np.array(self.x_test["metric_score"])
@@ -69,7 +68,10 @@ class CollaborativeFiltering:
             # 현재 컨텐츠를 평가하지 않은 사용자의 similarity값 제거
             sim_scores = sim_scores.drop(none_rating_idx)
             # 현재 컨텐츠를 평가한 모든 사용자의 가중평균값 구하기
-            mean_rating = np.dot(sim_scores, content_rating) / sim_scores.sum()
+            if sim_scores.sum() != 0:  # Check to avoid division by zero
+                mean_rating = np.dot(sim_scores, content_rating) / sim_scores.sum()
+            else:
+                mean_rating = 5.0  # Default value if no valid similarity scores
         else:
             mean_rating = 5.0
         return mean_rating
@@ -219,7 +221,7 @@ class CollaborativeFiltering:
         return prediction
 
     def recommender(
-        self, model: function, user_id: int, n_items: int = 2, neighbor_size: int = 2
+        self, model, user_id: int, n_items: int = 20, neighbor_size: int = 5
     ):
         """Recommend n_items for a given user based on collaborative filtering model."""
         # Calculate predicted ratings for all items for the current user
@@ -255,7 +257,7 @@ if __name__ == "__main__":
     print("CF simple:", cf.score(cf.cf_simple))
     print("CF KNN:", cf.score(cf.cf_knn))
     print("CF KNN user bias:", cf.score(cf.cf_knn_bias))
-    print("CF KNN bias sig:", cf.score(cf.cf_knn_bias_sig))  # data가 없어서 아직 실험 X
-    print(cf.recommender(cf.cf_knn, 1))
-    print(cf.recommender(cf.cf_knn_bias, 1))
-    print(cf.recommender(cf.cf_knn_bias_sig, 1))  # data가 없어서 아직 실험 X
+    print("CF KNN bias sig:", cf.score(cf.cf_knn_bias_sig))
+    print(cf.recommender(cf.cf_knn, 0))
+    print(cf.recommender(cf.cf_knn_bias, 0))
+    print(cf.recommender(cf.cf_knn_bias_sig, 0))
