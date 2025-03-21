@@ -73,7 +73,7 @@ class Bill(Base):
     bill_body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     bill_body_eng: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     ppsr_name: Mapped[str] = mapped_column(String(100), nullable=True)
-    ppsl_date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    ppsl_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     jrcmit_name: Mapped[str] = mapped_column(String(100), nullable=True)
     rgs_rsln_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     rgs_rsln_rslt: Mapped[str] = mapped_column(String(100), nullable=True)
@@ -88,7 +88,7 @@ class Bill(Base):
     keyword3: Mapped[Optional[str]] = mapped_column(
         String(500), nullable=True
     )  # 추가된 필드
-    bill_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    bill_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     # Relationship with BillSummaryRelation and BillSummary
