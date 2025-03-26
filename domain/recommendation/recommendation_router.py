@@ -47,13 +47,14 @@ def recommend_based_on_bill(
 ):
     # Get the specified content_id from the request
     content_id = recommendation.content_id
+    n_items = recommendation.n_items  # This is already available in your request
 
     # Query the similarity_scores table for the specified content_id
     similarity_scores = (
         db.query(SimilarityScore)
         .filter(SimilarityScore.source_bill_id == content_id)
         .order_by(SimilarityScore.similarity_score.desc())
-        .limit(recommendation.n_items)
+        .limit(n_items)
         .all()
     )
 
