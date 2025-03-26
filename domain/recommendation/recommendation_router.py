@@ -14,15 +14,16 @@ router = APIRouter(prefix="/api/recommend")
 
 @router.post("/collaborative", status_code=status.HTTP_200_OK)
 def recommend_collaborative(
-    user_recommendation: recommendation_schema.CollaborativeRecommendation,
+    recommendation_schema: recommendation_schema.CollaborativeRecommendation,
     db: Session = Depends(get_db),
 ):
     # Check if the user exists
-    user = recommendation_crud.get_existing_user(db, user=user_recommendation)
+    user = recommendation_crud.get_existing_user(db, user=recommendation_schema)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
         )
+    n_items = recommendation_schema.n_items
 
     # Create an instance of CollaborativeFiltering
     cf_model = CollaborativeFiltering()
@@ -30,9 +31,9 @@ def recommend_collaborative(
     # Get recommendations for the user
     recommended_items = cf_model.recommender(
         cf_model.cf_knn,
-        user_recommendation.user_id,
-        n_items=user_recommendation.n_items,
-        neighbor_size=user_recommendation.neighbor_size,
+        recommendation_schema.user_id,
+        n_items=n_items,
+        neighbor_size=recommendation_schema.neighbor_size,
     )
 
     return {
@@ -42,12 +43,12 @@ def recommend_collaborative(
 
 @router.post("/bill_contents", status_code=status.HTTP_200_OK)
 def recommend_based_on_bill(
-    recommendation: recommendation_schema.BillContentsRecommendation,  # Expecting content_id as input
+    recommendation_schema: recommendation_schema.BillContentsRecommendation,  # Expecting content_id as input
     db: Session = Depends(get_db),
 ):
     # Get the specified content_id from the request
-    content_id = recommendation.content_id
-    n_items = recommendation.n_items  # This is already available in your request
+    content_id = recommendation_schema.content_id
+    n_items = recommendation_schema.n_items  # This is already available in your request
 
     # Query the similarity_scores table for the specified content_id
     similarity_scores = (
@@ -79,11 +80,12 @@ def recommend_based_on_bill(
 
 @router.post("/user_contents", status_code=status.HTTP_200_OK)
 def recommend_based_on_interests(
-    recommendation: recommendation_schema.UserContentsRecommendation,  # Expecting n_contents and n_items as input
+    recommendation_schema: recommendation_schema.UserContentsRecommendation,  # Expecting n_contents and n_items as input
     db: Session = Depends(get_db),
 ):
     # Get the list of content IDs the user is interested in
-    n_contents = recommendation.n_contents
+    n_contents = recommendation_schema.n_contents
+    n_items = recommendation_schema.n_items
 
     # Check if the user has provided any content IDs
     if not n_contents:
@@ -105,7 +107,7 @@ def recommend_based_on_interests(
         .order_by(
             func.sum(SimilarityScore.similarity_score).desc()
         )  # Order by total similarity
-        .limit(recommendation.n_items)  # Limit to n_items
+        .limit(n_items)  # Limit to n_items
         .all()
     )
 
