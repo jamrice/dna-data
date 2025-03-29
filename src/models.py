@@ -198,10 +198,16 @@ class User(Base):
     password: Mapped[str] = mapped_column(String(255), nullable=True)
     # 성별
     gender: Mapped[str] = mapped_column(String(10), nullable=True)
+    # 우편번호
+    postal_code: Mapped[str] = mapped_column(String(10), nullable=True)
     # 주소
     address: Mapped[str] = mapped_column(String(255), nullable=True)
+    # 상세주소
+    address_detail: Mapped[str] = mapped_column(String(255), nullable=True)
     # 나이
     age: Mapped[int] = mapped_column(Integer, nullable=True)
+    # 생일
+    birthday: Mapped[datetime] = mapped_column(Date, nullable=True)
     # 생성날짜
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     # 이메일
