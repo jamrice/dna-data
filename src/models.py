@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
+    LargeBinary,
     String,
     Integer,
     Text,
@@ -66,12 +67,16 @@ class Bill(Base):
     bill_id: Mapped[Optional[str]] = mapped_column(
         String(255), unique=True, nullable=True
     )
-    url: Mapped[str] = mapped_column(String(500), nullable=False)
-    num: Mapped[int] = mapped_column(Integer, nullable=False)
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    bill_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    bill_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    bill_title_eng: Mapped[str] = mapped_column(String(255), nullable=True)
+    bill_body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    bill_body_eng: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ppsr_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    ppsl_date: Mapped[datetime] = mapped_column(Date, nullable=True)
+    jrcmit_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    rgs_rsln_date: Mapped[datetime] = mapped_column(Date, nullable=True)
+    rgs_rsln_rslt: Mapped[str] = mapped_column(String(100), nullable=True)
     ord_num: Mapped[int] = mapped_column(Integer, nullable=False)
     category: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     keyword1: Mapped[Optional[str]] = mapped_column(
@@ -83,9 +88,44 @@ class Bill(Base):
     keyword3: Mapped[Optional[str]] = mapped_column(
         String(500), nullable=True
     )  # 추가된 필드
+    bill_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
-    # Relationship with BillSummaryRelation and BillSummaryㅂ
+    # Relationship with BillSummaryRelation and BillSummary
     # summaries = relationship("BillSummary", back_populates="bill", cascade="all, delete-orphan")
+
+
+class UserPageVisit(Base):
+    __tablename__ = "user_page_visits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_id: Mapped[str] = mapped_column(Text, nullable=False)
+    visit_time: Mapped[int] = mapped_column(Integer, nullable=False)
+    visited_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
+
+
+class UserContentMetric(Base):
+    __tablename__ = "user_content_metrics"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    metric_score: Mapped[float] = mapped_column(Float, nullable=False)
+    update_date: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
+    __table_args__ = (UniqueConstraint("user_id", "content_id"),)
+
+
+class BillsEmbedding(Base):
+    __tablename__ = "bills_embedding"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bill_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("bills.bill_id"), nullable=False
+    )
+    embedding: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
 
 class BillSummary(Base):
@@ -189,13 +229,21 @@ class UserInterest(Base):
     # user = relationship("User", back_populates="user_interests")
 
 
-class SimiilarityScore(Base):
+class SimilarityScore(Base):
     __tablename__ = "similarity_scores"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    source_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
-    target_bill_no: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_bill_id: Mapped[str] = mapped_column(String(255), nullable=False)
     similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
     __table_args__ = (
-        UniqueConstraint("source_bill_no", "target_bill_no", name="uq_source_target"),
+        UniqueConstraint("source_bill_id", "target_bill_id", name="uq_source_target"),
     )
+
+
+class DateChecker(Base):
+    __tablename__ = "date_checker"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    content_date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    execute_date: Mapped[datetime] = mapped_column(Date, nullable=False)

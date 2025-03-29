@@ -29,13 +29,14 @@ class ConfExtractor:
         self.na_api_key = api_keyManager.get_na_api_key()
         self.conf_ids: list[str] = []  # To store conference IDs
         self.links: list[str] = []  # Store relevant links like VOD or PDF links
-        self.conf_info: dict[
-            str, str | None
-        ] = {}  # Store information about the first conference
+        self.conf_info: dict[str, str | None] = (
+            {}
+        )  # Store information about the first conference
 
         self.get_conf_info(dae_num, date)  # Fetch the first conference entry
 
         if self.conf_ids:
+            print("conf_ids: ", self.conf_ids)
             self.get_link_from_conf_id(self.conf_ids[0])
 
     def get_conf_info(
@@ -148,15 +149,15 @@ class ConfExtractor:
             password (str): Password for user.
         """
 
-        params = (
-            self.conf_ids[0],
-            self.conf_info["CONF_LINK_URL"],
-            self.conf_info["CONFER_NUM"],
-            self.conf_info["TITLE"],
-            self.conf_info["PDF_LINK_URL"],
-            self.conf_info["CONF_DATE"],
-            self.params_dict["DAE_NUM"],
-        )
+        params = {
+            "id": self.conf_info["CONFER_NUM"],
+            "url": self.conf_info["CONF_LINK_URL"],
+            "num": self.conf_info["CONFER_NUM"],
+            "title": self.conf_info["TITLE"],
+            "pdf_url": self.conf_info["PDF_LINK_URL"],
+            "date": self.conf_info["CONF_DATE"],
+            "ord_num": self.params_dict["DAE_NUM"],
+        }
 
         db_handler.save_conf(params=params)
 
@@ -303,12 +304,17 @@ class BillExtractor:
                 "BILL_NO": root.find(".//BILL_NO").text,
                 "BILL_ID": root.find(".//BILL_ID").text,
                 "BILL_NM": root.find(".//BILL_NM").text,
+                "PPSR_NM": root.find(".//PPSR_NM").text,
                 "PPSL_DT": root.find(".//PPSL_DT").text,
+                "JRCMIT_NM": root.find(".//JRCMIT_NM").text,
+                "RGS_RSLN_DT": root.find(".//RGS_RSLN_DT").text,
                 "RGS_CONF_RSLT": root.find(".//RGS_CONF_RSLT").text,
                 "LINK_URL": root.find(".//LINK_URL").text,
             }
-
+            print("get_bill_info = bill_id: ", bill_info["BILL_ID"])
             self.bill_info = bill_info
+            self._save()
+            print("after get_bill_info = bill_id: ", bill_info["BILL_ID"])
             return bill_info
 
         except ET.ParseError as e:
@@ -345,7 +351,7 @@ class BillExtractor:
         try:
             return self.bill_soup.find("div", {"id": "summaryContentDiv"}).text.strip()
         except Exception as e:
-            logger.error(f"Error: summaryContentDiv not found - {str(e)}")
+            logger.info(f"info: This bill url does not contain summary - {str(e)}")
             return ""
 
     def get_bill_no_pdf_url(self) -> tuple:
@@ -407,7 +413,7 @@ class BillExtractor:
         # Return both the bill number and the PDF URL
         return bill_no, self.pdf_url
 
-    def save_bill(self, host, user, password):
+    def _save(self):
         """
         Save to Database.
 
@@ -416,24 +422,44 @@ class BillExtractor:
             user (str): User name in database ex) root.
             password (str): Password for user.
         """
-
-        params = (
-            self.bill_info["BILL_ID"],
-            self.bill_info["LINK_URL"],
-            self.bill_info["BILL_NO"],
-            self.bill_info["BILL_NM"],
-            self.bill_summary,
-            self.pdf_url,
-            self.bill_info["PPSL_DT"],
-            self.bill_info["BILL_NO"][:2],
-        )
+        # bill_summary가 공란이면 BILL_NM으로 대체
+        if self.bill_summary == "":
+            self.bill_summary = self.bill_info["BILL_NM"]
+        params = {
+            "bill_id": self.bill_info["BILL_ID"],
+            "bill_no": self.bill_info["BILL_NO"],
+            "bill_title": self.bill_info["BILL_NM"],
+            "bill_body": self.bill_summary,
+            "ppsr_name": self.bill_info["PPSR_NM"],
+            "ppsl_date": self.bill_info["PPSL_DT"],
+            "jrcmit_name": self.bill_info["JRCMIT_NM"],
+            "rgs_rsln_date": self.bill_info["RGS_RSLN_DT"],
+            "rgs_rsln_rslt": self.bill_info["RGS_CONF_RSLT"],
+            "ord_num": self.bill_info["BILL_NO"][:2],
+            "bill_url": self.bill_info["LINK_URL"],
+            "pdf_url": self.pdf_url,
+        }
+        print("_save = bill_id: ", params["bill_id"])
         db_handler.save_bill(params=params)
+
+    def save_bill(self):
+        """
+        Save to Database.
+
+        Parameters:
+            host (str): Database host ip ex) localhost.
+            user (str): User name in database ex) root.
+            password (str): Password for user.
+        """
+        logger.error("save_bill function is deprecated. Use save instead.")
+        # bill_summary가 공란이면 BILL_NM으로 대체
+        self._save()
 
 
 class All_BillIdsExtractor:
     def __init__(self, host, user, password):
-        self.results = db_handler.read_all_value_table("bill_summary", "bill_id")
-        print(db_handler.read_all_value_table("bill_summary", "bill_id"))
+        self.results = db_handler.get_all_value_tables("bill_summary", "bill_id")
+        print(db_handler.get_all_value_tables("bill_summary", "bill_id"))
         logger.debug("All_BillIdsExtractor get:" + str(len(self.results)))
 
 
@@ -443,7 +469,7 @@ class All_KeywordExtractor:
         keylist = ["keyword1", "keyword2", "keyword3"]
         for column in keylist:
             table = "bill"
-            results = db_handler.read_all_value_table(table, column)
+            results = db_handler.get_all_value_tables(table, column)
             if not results is None:
                 self.results += [reulst[0] for reulst in results]
         self.results = list(set(self.results))
@@ -454,7 +480,7 @@ class KeywordExtractor:
         self.bill_id = bill_id
 
         table = "bill_summary"
-        result = db_handler.read_value_table(table, "bill_id", bill_id)
+        result = db_handler.get_value_table(table, "bill_id", bill_id)
         self.headline = result[1]
         self.sumary = result[2]
 
@@ -491,7 +517,7 @@ class KeywordExtractor:
             "keyword3",
         ]
         for index, set_column in enumerate(set_columns):
-            db_handler.update_value(
+            db_handler.update_bill_value(
                 table, column, self.bill_id, set_column, self.get_keywords[index]
             )
 
