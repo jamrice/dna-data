@@ -14,11 +14,6 @@ class BillContentsRecommendation(BaseModel):
     n_items: int = Field(default=5, gt=0, description="Number of items to recommend")
 
 
-class UserContentsRecommendation(BaseModel):
-    n_contents: List[str]
-    n_items: int = Field(default=20, gt=0, description="Number of items to recommend")
-
-
 class UserRecommendation(BaseModel):
     user_id: int
     n_contents: int = 20

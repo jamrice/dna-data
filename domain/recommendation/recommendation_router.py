@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from starlette import status
 
+from src.db_handler import db_handler
 from src.models import SimilarityScore  # Import your SimilarityScore model
 from src.database import get_db
 from src.recommendation_models.collaborative_filtering import CollaborativeFiltering
@@ -23,7 +24,7 @@ def recommend_collaborative(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
         )
-    n_items = recommendation_schema.n_items
+    n_recommendations = recommendation_schema.n_recommendations
 
     # Create an instance of CollaborativeFiltering
     cf_model = CollaborativeFiltering()
@@ -32,7 +33,7 @@ def recommend_collaborative(
     recommended_items = cf_model.recommender(
         cf_model.cf_knn,
         recommendation_schema.user_id,
-        n_items=n_items,
+        n_recommendations=n_recommendations,
         neighbor_size=recommendation_schema.neighbor_size,
     )
 
@@ -48,14 +49,16 @@ def recommend_based_on_bill(
 ):
     # Get the specified content_id from the request
     content_id = recommendation_schema.content_id
-    n_items = recommendation_schema.n_items  # This is already available in your request
+    n_recommendations = (
+        recommendation_schema.n_recommendations
+    )  # This is already available in your request
 
     # Query the similarity_scores table for the specified content_id
     similarity_scores = (
         db.query(SimilarityScore)
         .filter(SimilarityScore.source_bill_id == content_id)
         .order_by(SimilarityScore.similarity_score.desc())
-        .limit(n_items)
+        .limit(n_recommendations)
         .all()
     )
 
@@ -78,14 +81,34 @@ def recommend_based_on_bill(
     }  # Return the recommended content IDs
 
 
-@router.post("/user_contents", status_code=status.HTTP_200_OK)
+@router.post(
+    "/user_contents",
+    response_model=recommendation_schema.UserRecommendationResponse,
+    status_code=status.HTTP_200_OK,
+)
 def recommend_based_on_interests(
-    recommendation_schema: recommendation_schema.UserContentsRecommendation,  # Expecting n_contents and n_items as input
+    user_id: int = Query(1, description="User ID"),
+    n_contents: int = Query(
+        20,
+        description="Number of contents to take into consideration for recommendation",
+    ),  # Default value from schema
+    n_recommendations: int = Query(
+        5, description="Number of recommended contents"
+    ),  # Default value from schema
     db: Session = Depends(get_db),
 ):
-    # Get the list of content IDs the user is interested in
-    n_contents = recommendation_schema.n_contents
-    n_items = recommendation_schema.n_items
+    """
+    특정 사용자의 최근 방문한 n_contents 페이지들의 코사인 유사도 점수를 합산하여,
+    가장 점수가 높은 n_recommendations 개의 컨텐츠를 추천합니다.
+
+    Args:
+        user_id (int): 사용자 ID
+        n_contents (int): 참고할 유저의 컨텐츠 수
+        n_recommendations (int): 추천할 컨텐츠 수
+
+    Returns:
+        dictionary: schema를 따르는 추천된 컨텐츠를 포함한 반환값
+    """
 
     # Check if the user has provided any content IDs
     if not n_contents:
@@ -94,20 +117,29 @@ def recommend_based_on_interests(
             detail="No content IDs provided.",
         )
 
-    # Query to calculate total cosine similarity for all contents excluding the user's interests
+    recent_page_ids = db_handler.get_recent_contents(user_id)
+
+    # Query to calculate total cosine similarity for contents based on user's recent visits
     total_similarity = (
         db.query(
             SimilarityScore.target_bill_id,
             func.sum(SimilarityScore.similarity_score).label("total_similarity"),
         )
-        # .filter(
-        #     SimilarityScore.source_bill_id.notin_(n_contents)
-        # )  # Exclude user's interests
+        .filter(
+            SimilarityScore.source_bill_id.in_(
+                recent_page_ids
+            )  # Include only similarities from recent visits
+        )
+        .filter(
+            SimilarityScore.target_bill_id.notin_(
+                recent_page_ids
+            )  # Exclude already visited pages
+        )
         .group_by(SimilarityScore.target_bill_id)
         .order_by(
             func.sum(SimilarityScore.similarity_score).desc()
         )  # Order by total similarity
-        .limit(n_items)  # Limit to n_items
+        .limit(n_recommendations)  # Limit to n_recommendations
         .all()
     )
 
@@ -124,23 +156,6 @@ def recommend_based_on_interests(
     ]  # score is a tuple
 
     return {
-        "recommended_content_ids": recommended_content_ids
+        "user_id": user_id,
+        "recommended_content_ids": recommended_content_ids,
     }  # Return the recommended content IDs
-
-
-@router.get("/user_recommendation", response_model=recommendation_schema.UserRecommendationResponse)
-def recommend_based_on_user(
-    user_id: int = Query(1, description="User ID"),
-    n_contents: int = Query(20, description="Number of contents"),  # Default value from schema
-    n_items: int = Query(5, description="Number of items"),      # Default value from schema 
-    db: Session = Depends(get_db),
-):
-    print("test recommendation")
-    # Create UserRecommendationResponse object
-    response = recommendation_schema.UserRecommendationResponse(
-        user_id=user_id,
-        n_contents=n_contents,
-        n_items=n_items,
-        recommended_content_ids=["temp"]  # Placeholder list, replace with actual recommendations
-    )
-    return response
