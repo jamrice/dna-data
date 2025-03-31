@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -126,3 +126,21 @@ def recommend_based_on_interests(
     return {
         "recommended_content_ids": recommended_content_ids
     }  # Return the recommended content IDs
+
+
+@router.get("/user_recommendation", response_model=recommendation_schema.UserRecommendationResponse)
+def recommend_based_on_user(
+    user_id: int = Query(1, description="User ID"),
+    n_contents: int = Query(20, description="Number of contents"),  # Default value from schema
+    n_items: int = Query(5, description="Number of items"),      # Default value from schema 
+    db: Session = Depends(get_db),
+):
+    print("test recommendation")
+    # Create UserRecommendationResponse object
+    response = recommendation_schema.UserRecommendationResponse(
+        user_id=user_id,
+        n_contents=n_contents,
+        n_items=n_items,
+        recommended_content_ids=["temp"]  # Placeholder list, replace with actual recommendations
+    )
+    return response

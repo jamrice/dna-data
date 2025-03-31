@@ -17,3 +17,16 @@ class BillContentsRecommendation(BaseModel):
 class UserContentsRecommendation(BaseModel):
     n_contents: List[str]
     n_items: int = Field(default=20, gt=0, description="Number of items to recommend")
+
+
+class UserRecommendation(BaseModel):
+    user_id: int
+    n_contents: int = 20
+    n_items: int = 5
+
+
+class UserRecommendationResponse(BaseModel):
+    user_id: int
+    n_contents: int = 20
+    n_items: int = 5
+    recommended_content_ids: List[str]
