@@ -9,6 +9,7 @@ from src.models import (
     BillsEmbedding,
     SimilarityScore,
     Conf,
+    UserPageVisit,
 )  # Bill 모델 클래스 정의가 필요합니다
 
 
@@ -235,6 +236,37 @@ class DBHandler:
         except Exception as e:
             self.db.rollback()  # Roll back the transaction on error
             logger.error(f"Error saving similarity score: {str(e)}")
+
+    @catch_sql_except
+    def get_recent_contents(self, user_id, n_items=20):
+        """
+        특정 사용자의 최근 방문한 페이지 목록을 가져오는 함수
+
+        Args:
+            user_id (int): 사용자 ID
+            n_items (int): 가져올 페이지 수 (기본값: 20)
+
+        Returns:
+            list: 최근 방문한 페이지 ID 목록
+        """
+        try:
+            # user_page_visits 테이블에서 최근 방문 순으로 페이지 조회
+            recent_visits = (
+                self.db.query(UserPageVisit.page_id)
+                .filter(UserPageVisit.user_id == user_id)
+                .order_by(UserPageVisit.visited_at.desc())
+                .limit(n_items)
+                .all()
+            )
+
+            # 결과를 리스트로 변환 (튜플에서 page_id만 추출)
+            recent_page_ids = [visit[0] for visit in recent_visits]
+
+            return recent_page_ids
+
+        except Exception as e:
+            logger.error(f"Error fetching recent contents for user {user_id}: {str(e)}")
+            return []
 
 
 # Dependency for DB connection
