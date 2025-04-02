@@ -50,7 +50,7 @@ def recommend_based_on_bill(
     # Get the specified content_id from the request
     content_id = recommendation_schema.content_id
     n_recommendations = (
-        recommendation_schema.n_recommendations
+        recommendation_schema.n_items
     )  # This is already available in your request
 
     # Query the similarity_scores table for the specified content_id
