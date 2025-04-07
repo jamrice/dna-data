@@ -23,5 +23,5 @@ class UserRecommendation(BaseModel):
 class UserRecommendationResponse(BaseModel):
     user_id: int
     n_contents: int = 20
-    n_items: int = 5
+    n_recommendations: int = 5
     recommended_content_ids: List[str]
