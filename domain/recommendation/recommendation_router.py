@@ -142,20 +142,16 @@ def recommend_based_on_interests(
         .limit(n_recommendations)  # Limit to n_recommendations
         .all()
     )
-
+    print("total_similarity", total_similarity)
     # Check if any similarity scores were found
-    if not total_similarity:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No similarity scores found for the specified contents.",
-        )
-
-    # Extract the recommended content IDs from the results
-    recommended_content_ids = [
-        content[0] for content in total_similarity
-    ]  # score is a tuple
+    return_contents = [content[0] for content in total_similarity]
+    # If the number of recommended contents is less than n_recommendations,
+    # fill the remaining slots with zeros
+    if len(return_contents) < n_recommendations:
+        remaining_slots = n_recommendations - len(return_contents)
+        return_contents.extend(['PRC_V2U4C0C9B1B9Z1A6Z3Z5H0H5F6E9F4'] * remaining_slots)
 
     return {
         "user_id": user_id,
-        "recommended_content_ids": recommended_content_ids,
+        "recommended_content_ids": return_contents,
     }  # Return the recommended content IDs
