@@ -100,6 +100,9 @@ class Content(Base):
     content_id: Mapped[str] = mapped_column(String(255), nullable=False)
     docstype_index: Mapped[int] = mapped_column(Integer, default=0)
     views: Mapped[int] = mapped_column(Integer, default=0)
+    likes: Mapped[int] = mapped_column(Integer, default=0)
+    unlikes: Mapped[int] = mapped_column(Integer, default=0)
+    comments: Mapped[int] = mapped_column(Integer, default=0)
 
 class UserPageVisit(Base):
     __tablename__ = "user_page_visits"
