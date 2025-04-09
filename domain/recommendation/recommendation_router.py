@@ -129,6 +129,8 @@ def recommend_based_on_interests(
         return_contents.append(
             bs.get_best_sellers(6)
         )  # 몇개나 best seller로 가져올지 n 값을 넣어줘야함.
+        # 주목도가 적은거 or 아예 새롭게 추가된 의안
+        # 아예 random reco
         pass
 
     else:
