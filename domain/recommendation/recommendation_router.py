@@ -168,4 +168,6 @@ def recommend_based_on_interests(
     return {
         "user_id": user_id,
         "recommended_content_ids": return_contents,
+        "n_contents": n_contents,
+        "n_recommendations": n_recommendations,
     }  # Return the recommended content IDs
