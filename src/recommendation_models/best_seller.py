@@ -19,6 +19,7 @@ class BestSeller:
         )
         return metrics
 
+
     def get_best_sellers(self, top_n: int = 10) -> list:
         """
         content_id 기준으로 평균 metric_score를 계산하여
