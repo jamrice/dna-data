@@ -116,9 +116,10 @@ def recommend_based_on_interests(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No content IDs provided.",
         )
-
-    recent_page_ids = db_handler.get_recent_contents(user_id)
-
+    print("user_id", user_id)
+    print("n_recommendations", n_recommendations)
+    recent_page_ids = db_handler.get_recent_contents(user_id, n_contents)
+    print("recent_page_ids", recent_page_ids)
     # Query to calculate total cosine similarity for contents based on user's recent visits
     total_similarity = (
         db.query(
@@ -154,4 +155,6 @@ def recommend_based_on_interests(
     return {
         "user_id": user_id,
         "recommended_content_ids": return_contents,
+        "n_contents": n_contents,
+        "n_recommendations": n_recommendations,
     }  # Return the recommended content IDs

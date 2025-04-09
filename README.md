@@ -36,3 +36,5 @@ alembic upgrade head
 USE DATABASE test_db_2;
 SHOW TABLES
 
+# uvicorn 실행
+nohup uvicorn main:app --host 0.0.0.0 --port 5173 --reload > uvicorn.log 2>&1 &
