@@ -19,10 +19,10 @@ class BestSeller:
         )
         return metrics
 
-    def get_best_sellers(self, top_n: int = 10) -> pd.DataFrame:
+    def get_best_sellers(self, top_n: int = 10) -> list:
         """
         content_id 기준으로 평균 metric_score를 계산하여
-        상위 top_n개의 베스트셀러를 반환한다.
+        상위 top_n개의 베스트셀러의 content_id 리스트를 반환한다.
         """
         grouped = (
             self.metrics.groupby("content_id")["metric_score"]
@@ -31,7 +31,7 @@ class BestSeller:
             .rename(columns={"metric_score": "avg_metric_score"})
             .sort_values(by="avg_metric_score", ascending=False)
         )
-        return grouped.head(top_n)
+        return grouped["content_id"].head(top_n).tolist()
 
 
 if __name__ == "__main__":

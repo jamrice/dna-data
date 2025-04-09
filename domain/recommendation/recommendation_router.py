@@ -8,6 +8,7 @@ from src.db_handler import db_handler
 from src.models import SimilarityScore  # Import your SimilarityScore model
 from src.database import get_db
 from src.recommendation_models.collaborative_filtering import CollaborativeFiltering
+from src.recommendation_models.best_seller import BestSeller
 from domain.recommendation import recommendation_crud, recommendation_schema
 
 router = APIRouter(prefix="/api/recommend")
@@ -110,6 +111,8 @@ def recommend_based_on_interests(
         dictionary: schema를 따르는 추천된 컨텐츠를 포함한 반환값
     """
 
+    return_contents = []
+
     # Check if the user has provided any content IDs
     if not n_contents:
         raise HTTPException(
@@ -117,39 +120,50 @@ def recommend_based_on_interests(
             detail="No content IDs provided.",
         )
 
-    recent_page_ids = db_handler.get_recent_contents(user_id)
+    # default n_contents = 20
+    recent_page_ids = db_handler.get_recent_contents(user_id, n_contents)
 
-    # Query to calculate total cosine similarity for contents based on user's recent visits
-    total_similarity = (
-        db.query(
-            SimilarityScore.target_bill_id,
-            func.sum(SimilarityScore.similarity_score).label("total_similarity"),
+    # 만약 참조할 유저의 컨텐츠가 5개 미만이라면, best seller와 random reco를 사용
+    if recent_page_ids == False:
+        bs = BestSeller()
+        return_contents.append(
+            bs.get_best_sellers(6)
+        )  # 몇개나 best seller로 가져올지 n 값을 넣어줘야함.
+        pass
+
+    else:
+        # Query to calculate total cosine similarity for contents based on user's recent visits
+        total_similarity = (
+            db.query(
+                SimilarityScore.target_bill_id,
+                func.sum(SimilarityScore.similarity_score).label("total_similarity"),
+            )
+            .filter(
+                SimilarityScore.source_bill_id.in_(
+                    recent_page_ids
+                )  # Include only similarities from recent visits
+            )
+            .filter(
+                SimilarityScore.target_bill_id.notin_(
+                    recent_page_ids
+                )  # Exclude already visited pages
+            )
+            .group_by(SimilarityScore.target_bill_id)
+            .order_by(
+                func.sum(SimilarityScore.similarity_score).desc()
+            )  # Order by total similarity
+            .limit(n_recommendations)  # Limit to n_recommendations
+            .all()
         )
-        .filter(
-            SimilarityScore.source_bill_id.in_(
-                recent_page_ids
-            )  # Include only similarities from recent visits
-        )
-        .filter(
-            SimilarityScore.target_bill_id.notin_(
-                recent_page_ids
-            )  # Exclude already visited pages
-        )
-        .group_by(SimilarityScore.target_bill_id)
-        .order_by(
-            func.sum(SimilarityScore.similarity_score).desc()
-        )  # Order by total similarity
-        .limit(n_recommendations)  # Limit to n_recommendations
-        .all()
-    )
-    print("total_similarity", total_similarity)
-    # Check if any similarity scores were found
-    return_contents = [content[0] for content in total_similarity]
+        # Check if any similarity scores were found
+        return_contents = [content[0] for content in total_similarity]
+
+    # 여기도 random reco를 활용해야함
     # If the number of recommended contents is less than n_recommendations,
     # fill the remaining slots with zeros
     if len(return_contents) < n_recommendations:
         remaining_slots = n_recommendations - len(return_contents)
-        return_contents.extend(['PRC_V2U4C0C9B1B9Z1A6Z3Z5H0H5F6E9F4'] * remaining_slots)
+        return_contents.extend(["PRC_V2U4C0C9B1B9Z1A6Z3Z5H0H5F6E9F4"] * remaining_slots)
 
     return {
         "user_id": user_id,
