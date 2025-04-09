@@ -90,10 +90,16 @@ class Bill(Base):
     )  # 추가된 필드
     bill_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-
     # Relationship with BillSummaryRelation and BillSummary
     # summaries = relationship("BillSummary", back_populates="bill", cascade="all, delete-orphan")
 
+class Content(Base):
+    __tablename__ = "contents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    content_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    docstype_index: Mapped[int] = mapped_column(Integer, default=0)
+    views: Mapped[int] = mapped_column(Integer, default=0)
 
 class UserPageVisit(Base):
     __tablename__ = "user_page_visits"
