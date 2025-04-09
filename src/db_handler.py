@@ -239,7 +239,7 @@ class DBHandler:
             logger.error(f"Error saving similarity score: {str(e)}")
 
     @catch_sql_except
-    def get_recent_contents(self, user_id, n_items=20):
+    def get_recent_contents(self, user_id, n_items):
         """
         특정 사용자의 최근 방문한 페이지 목록을 가져오는 함수
 
@@ -262,6 +262,10 @@ class DBHandler:
 
             # 결과를 리스트로 변환 (튜플에서 page_id만 추출)
             recent_page_ids = [visit[0] for visit in recent_visits]
+
+            # 유저가 access했던 컨텐츠가 5개보다 적을 때 False를 반환
+            if len(recent_page_ids) < 5:
+                return False
 
             return recent_page_ids
 
