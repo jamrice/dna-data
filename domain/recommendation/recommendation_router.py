@@ -9,6 +9,8 @@ from src.models import SimilarityScore  # Import your SimilarityScore model
 from src.database import get_db
 from src.recommendation_models.collaborative_filtering import CollaborativeFiltering
 from src.recommendation_models.best_seller import BestSeller
+from src.recommendation_models.new_reco import NewRecommendation
+from src.recommendation_models.random_reco import RandomRecommendation
 from domain.recommendation import recommendation_crud, recommendation_schema
 
 router = APIRouter(prefix="/api/recommend")
@@ -126,12 +128,14 @@ def recommend_based_on_interests(
     # 만약 참조할 유저의 컨텐츠가 5개 미만이라면, best seller와 random reco를 사용
     if recent_page_ids == False:
         bs = BestSeller()
-        return_contents.append(
-            bs.get_best_sellers(6)
-        )  # 몇개나 best seller로 가져올지 n 값을 넣어줘야함.
+        return_contents.extend(bs.get_best_sellers(6))
         # 주목도가 적은거 or 아예 새롭게 추가된 의안
+        nr = NewRecommendation()
+        return_contents.extend(nr.get_worst_sellers(2))
+        return_contents.extend(nr.get_newest(2))
         # 아예 random reco
-        pass
+        rr = RandomRecommendation()
+        return_contents.extend(rr.recommend_radomly(2))
 
     else:
         # Query to calculate total cosine similarity for contents based on user's recent visits
@@ -166,6 +170,17 @@ def recommend_based_on_interests(
     if len(return_contents) < n_recommendations:
         remaining_slots = n_recommendations - len(return_contents)
         return_contents.extend(["PRC_V2U4C0C9B1B9Z1A6Z3Z5H0H5F6E9F4"] * remaining_slots)
+
+    print("debugging", type(return_contents), return_contents)
+    print(
+        "Returning to client: ",
+        {
+            "user_id": user_id,
+            "recommended_content_ids": return_contents,
+            "n_contents": n_contents,
+            "n_recommendations": n_recommendations,
+        },
+    )
 
     return {
         "user_id": user_id,
