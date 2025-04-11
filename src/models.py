@@ -104,6 +104,14 @@ class Content(Base):
     unlikes: Mapped[int] = mapped_column(Integer, default=0)
     comments: Mapped[int] = mapped_column(Integer, default=0)
 
+class Like(Base):
+    __tablename__ = "likes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_id: Mapped[str] = mapped_column(String(500), nullable=False)
+
+
 class UserPageVisit(Base):
     __tablename__ = "user_page_visits"
 

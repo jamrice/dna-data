@@ -128,6 +128,7 @@ def recommend_based_on_interests(
 
     # 만약 참조할 유저의 컨텐츠가 5개 미만이라면, best seller와 random reco를 사용
     if recent_page_ids == False:
+        print("No recent page IDs found for user %d", user_id)
         bs = BestSeller()
         return_contents.extend(bs.get_best_sellers(6))
         # 주목도가 적은거 or 아예 새롭게 추가된 의안
@@ -138,6 +139,8 @@ def recommend_based_on_interests(
         return_contents.extend(rr.recommend_randomly(return_contents, 2))
 
     else:
+        print("User contents found")
+        print(f"recent_page_ids: {len(recent_page_ids)}")
         # set number of random recommendations to make
         n_random = 2
         # Query to calculate total cosine similarity for contents based on user's recent visits
@@ -173,6 +176,7 @@ def recommend_based_on_interests(
     # fill the remaining slots with zeros
     if len(return_contents) < n_recommendations:
         n_remaining_slots = n_recommendations - len(return_contents)
+        print(f"n_remaining_slots: {n_remaining_slots}")
         return_contents.extend(
             rr.recommend_randomly(return_contents, n_remaining_slots)
         )
