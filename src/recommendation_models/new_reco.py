@@ -8,7 +8,6 @@ class NewRecommendation:
     def __init__(self):
         self.db_handler = get_db_handler()
         self.views = self.get_views()
-        self.worst_sellers = self.get_worst_sellers()
         self.dates = self.get_dates()
 
     def get_views(self):
@@ -32,20 +31,24 @@ class NewRecommendation:
         )
         return dates
 
-    def get_worst_sellers(self, top_n: int = 6) -> list:
+    def get_worst_sellers(self, recommendations: list, top_n: int = 6) -> list:
         """
         의안의 views를 기준으로 오름차순 정렬하여
         하위 top_n개의 베스트셀러의 content_id 리스트를 반환한다.
+        recommendations에 있는 content_id는 제외한다.
         """
-        recos = self.views.sort_values(by="views", ascending=True)
+        recos = self.views[~self.views["content_id"].isin(recommendations)]
+        recos = recos.sort_values(by="views", ascending=True)
         return recos["content_id"].head(top_n).tolist()
 
-    def get_newest(self, recent_n: int = 6) -> list:
+    def get_newest(self, recommendations: list, recent_n: int = 6) -> list:
         """
         본회의에서 의안이 확결된 날짜를 기준으로
         가장 최근 n개의 의안 리스트를 반환한다.
+        recommendations에 있는 bill_id는 제외한다.
         """
-        recos = self.dates.sort_values(by="rgs_rsln_date", ascending=False)
+        recos = self.dates[~self.dates["bill_id"].isin(recommendations)]
+        recos = recos.sort_values(by="rgs_rsln_date", ascending=False)
         return recos["bill_id"].head(recent_n).tolist()
 
 
