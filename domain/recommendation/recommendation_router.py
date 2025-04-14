@@ -4,16 +4,16 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from starlette import status
 
+import src.recommendation_models as rm
+from src.dna_logger import logger
 from src.db_handler import db_handler
 from src.models import SimilarityScore  # Import your SimilarityScore model
 from src.database import get_db
-from src.recommendation_models.collaborative_filtering import CollaborativeFiltering
-from src.recommendation_models.best_seller import BestSeller
-from src.recommendation_models.new_reco import NewRecommendation
-from src.recommendation_models.random_reco import RandomRecommendation
 from domain.recommendation import recommendation_crud, recommendation_schema
 
 router = APIRouter(prefix="/api/recommend")
+
+exception_counter = {"count": 0}
 
 
 @router.post("/collaborative", status_code=status.HTTP_200_OK)
@@ -30,7 +30,7 @@ def recommend_collaborative(
     n_recommendations = recommendation_schema.n_recommendations
 
     # Create an instance of CollaborativeFiltering
-    cf_model = CollaborativeFiltering()
+    cf_model = rm.CollaborativeFiltering()
 
     # Get recommendations for the user
     recommended_items = cf_model.recommender(
@@ -94,96 +94,72 @@ def recommend_based_on_interests(
     n_contents: int = Query(
         20,
         description="Number of contents to take into consideration for recommendation",
-    ),  # Default value from schema
-    n_recommendations: int = Query(
-        5, description="Number of recommended contents"
-    ),  # Default value from schema
+    ),
+    n_recommendations: int = Query(5, description="Number of recommended contents"),
     db: Session = Depends(get_db),
 ):
     """
     특정 사용자의 최근 방문한 n_contents 페이지들의 코사인 유사도 점수를 합산하여,
     가장 점수가 높은 n_recommendations 개의 컨텐츠를 추천합니다.
-
-    Args:
-        user_id (int): 사용자 ID
-        n_contents (int): 참고할 유저의 컨텐츠 수
-        n_recommendations (int): 추천할 컨텐츠 수
-
-    Returns:
-        dictionary: schema를 따르는 추천된 컨텐츠를 포함한 반환값
     """
 
-    return_contents = []
-    rr = RandomRecommendation()
+    try:
+        return_contents = []
+        rr = rm.RandomRecommendation()
 
-    # Check if the user has provided any content IDs
-    if not n_contents:
+        if not n_contents:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No content IDs provided.",
+            )
+
+        recent_page_ids = db_handler.get_recent_contents(user_id, n_contents)
+
+        if recent_page_ids is False:
+            bs = rm.BestSeller()
+            return_contents.extend(bs.get_best_sellers(6))
+            nr = rm.NewRecommendation()
+            return_contents.extend(nr.get_newest(return_contents, 2))
+            return_contents.extend(nr.get_worst_sellers(return_contents, 2))
+            return_contents.extend(rr.recommend_randomly(return_contents, 2))
+        else:
+            n_random = 2
+            total_similarity = (
+                db.query(
+                    SimilarityScore.target_bill_id,
+                    func.sum(SimilarityScore.similarity_score).label(
+                        "total_similarity"
+                    ),
+                )
+                .filter(SimilarityScore.source_bill_id.in_(recent_page_ids))
+                .filter(SimilarityScore.target_bill_id.notin_(recent_page_ids))
+                .group_by(SimilarityScore.target_bill_id)
+                .order_by(func.sum(SimilarityScore.similarity_score).desc())
+                .limit(n_recommendations - n_random)
+                .all()
+            )
+            return_contents = [content[0] for content in total_similarity]
+            return_contents.extend(rr.recommend_randomly(return_contents, n_random))
+
+        if len(return_contents) < n_recommendations:
+            n_remaining_slots = n_recommendations - len(return_contents)
+            return_contents.extend(
+                rr.recommend_randomly(return_contents, n_remaining_slots)
+            )
+
+        return {
+            "user_id": user_id,
+            "recommended_content_ids": return_contents,
+            "n_contents": n_contents,
+            "n_recommendations": n_recommendations,
+        }
+
+    except Exception as e:
+        exception_counter["count"] += 1
+        logger.exception(
+            f"[예외 발생 {exception_counter['count']}회차] 추천 생성 중 예외 발생: {str(e)}"
+        )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No content IDs provided.",
+            status_code=500,
+            detail="Internal Server Error during recommendation process.",
         )
-
-    # default n_contents = 20
-    recent_page_ids = db_handler.get_recent_contents(user_id, n_contents)
-
-    # 만약 참조할 유저의 컨텐츠가 5개 미만이라면, best seller와 random reco를 사용
-    if recent_page_ids == False:
-        print("No recent page IDs found for user %d", user_id)
-        bs = BestSeller()
-        return_contents.extend(bs.get_best_sellers(6))
-        # 주목도가 적은거 or 아예 새롭게 추가된 의안
-        nr = NewRecommendation()
-        return_contents.extend(nr.get_newest(return_contents, 2))
-        return_contents.extend(nr.get_worst_sellers(return_contents, 2))
-        # 아예 random reco
-        return_contents.extend(rr.recommend_randomly(return_contents, 2))
-
-    else:
-        print("User contents found")
-        print(f"recent_page_ids: {len(recent_page_ids)}")
-        # set number of random recommendations to make
-        n_random = 2
-        # Query to calculate total cosine similarity for contents based on user's recent visits
-        total_similarity = (
-            db.query(
-                SimilarityScore.target_bill_id,
-                func.sum(SimilarityScore.similarity_score).label("total_similarity"),
-            )
-            .filter(
-                SimilarityScore.source_bill_id.in_(
-                    recent_page_ids
-                )  # Include only similarities from recent visits
-            )
-            .filter(
-                SimilarityScore.target_bill_id.notin_(
-                    recent_page_ids
-                )  # Exclude already visited pages
-            )
-            .group_by(SimilarityScore.target_bill_id)
-            .order_by(
-                func.sum(SimilarityScore.similarity_score).desc()
-            )  # Order by total similarity
-            .limit(n_recommendations - n_random)  # Limit to n_recommendations
-            .all()
-        )
-        # Check if any similarity scores were found
-        return_contents = [content[0] for content in total_similarity]
-        # add random recommendations
-        return_contents.extend(rr.recommend_randomly(return_contents, n_random))
-
-    # 여기도 random reco를 활용해야함
-    # If the number of recommended contents is less than n_recommendations,
-    # fill the remaining slots with zeros
-    if len(return_contents) < n_recommendations:
-        n_remaining_slots = n_recommendations - len(return_contents)
-        print(f"n_remaining_slots: {n_remaining_slots}")
-        return_contents.extend(
-            rr.recommend_randomly(return_contents, n_remaining_slots)
-        )
-
-    return {
-        "user_id": user_id,
-        "recommended_content_ids": return_contents,
-        "n_contents": n_contents,
-        "n_recommendations": n_recommendations,
-    }  # Return the recommended content IDs
