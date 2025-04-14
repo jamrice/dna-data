@@ -122,7 +122,16 @@ class Comment(Base):
     comment_text: Mapped[str] = mapped_column(Text, nullable=False)
     parent_id: Mapped[int] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    
+    likes: Mapped[int] = mapped_column(Integer, nullable=False)
+
+class CommentLike(Base):
+    __tablename__ = "comment_likes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    like_type: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
 class UserPageVisit(Base):
     __tablename__ = "user_page_visits"
 
