@@ -1,12 +1,13 @@
 import pandas as pd
+from src.db_handler import DBHandler
 from src.dna_logger import logger
 from src.db_handler import get_db_handler
 from sqlalchemy import text
 
 
 class RandomRecommendation:
-    def __init__(self):
-        self.db_handler = get_db_handler()
+    def __init__(self, db_handler: DBHandler):
+        self.db_handler = db_handler
 
     def recommend_randomly(
         self,
