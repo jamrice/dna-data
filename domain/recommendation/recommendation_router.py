@@ -102,6 +102,7 @@ def recommend_based_on_interests(
     특정 사용자의 최근 방문한 n_contents 페이지들의 코사인 유사도 점수를 합산하여,
     가장 점수가 높은 n_recommendations 개의 컨텐츠를 추천합니다.
     """
+
     try:
         return_contents = []
         rr = rm.RandomRecommendation()
