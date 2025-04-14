@@ -113,6 +113,16 @@ class Like(Base):
     content_id: Mapped[str] = mapped_column(String(500), nullable=False)
     like_type: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_id: Mapped[str] = mapped_column(String(500), nullable=False)
+    comment_text: Mapped[str] = mapped_column(Text, nullable=False)
+    parent_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    
 class UserPageVisit(Base):
     __tablename__ = "user_page_visits"
 
