@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
+    Boolean,
     LargeBinary,
     String,
     Integer,
@@ -110,7 +111,7 @@ class Like(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)
     content_id: Mapped[str] = mapped_column(String(500), nullable=False)
-
+    like_type: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
 class UserPageVisit(Base):
     __tablename__ = "user_page_visits"
