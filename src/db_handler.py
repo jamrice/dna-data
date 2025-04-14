@@ -1,3 +1,5 @@
+from fastapi import Depends
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
@@ -275,34 +277,43 @@ class DBHandler:
 
     @catch_sql_except
     def get_content(self, content_id):
-        content = self.db.query(Content).filter(Content.content_id == content_id).first()
+        content = (
+            self.db.query(Content).filter(Content.content_id == content_id).first()
+        )
         return content
-    
+
     @catch_sql_except
     def check_content_exists(self, content_id) -> bool:
         """주어진 content_id에 해당하는 컨텐츠가 존재하는지 확인하는 함수"""
-        content = self.db.query(Content).filter(Content.content_id == content_id).first()
+        content = (
+            self.db.query(Content).filter(Content.content_id == content_id).first()
+        )
         return content is not None
 
     @catch_sql_except
     def increment_content_views(self, content_id):
         """특정 content의 조회수를 1 증가시키는 함수"""
         try:
-            content = self.db.query(Content).filter(Content.content_id == content_id).first()
+            content = (
+                self.db.query(Content).filter(Content.content_id == content_id).first()
+            )
             if content:
                 content.views += 1
                 self.db.commit()
                 return True
             else:
-                logger.warning(f"Content with ID {content_id} not found for view increment.")
+                logger.warning(
+                    f"Content with ID {content_id} not found for view increment."
+                )
                 return False
         except Exception as e:
             logger.error(f"Error incrementing views for content {content_id}: {str(e)}")
             self.db.rollback()
             return False
+
+
 # Dependency for DB connection
-def get_db_handler():
-    db = next(get_db())  # get_db()는 generator이므로 next()로 세션 가져옴
+def get_db_handler(db: Session = Depends(get_db)):
     return DBHandler(db)
 
 

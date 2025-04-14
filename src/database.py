@@ -4,6 +4,7 @@ from sqlalchemy.exc import OperationalError
 
 import os
 from dotenv import load_dotenv
+from dna_logger import logger
 
 # 환경변수를 사용하여 비밀번호 가져오기
 load_dotenv()
@@ -42,9 +43,11 @@ Base.metadata = MetaData(naming_convention=naming_convention)
 # Dependency for DB connection
 def get_db():
     db = SessionLocal()
+    logger.info("DB session opened")
     try:
         yield db
     finally:
+        logger.info("DB session closed")
         db.close()
 
 
