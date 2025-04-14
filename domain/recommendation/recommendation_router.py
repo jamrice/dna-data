@@ -6,7 +6,7 @@ from starlette import status
 
 import src.recommendation_models as rm
 from src.dna_logger import logger
-from src.db_handler import get_db_handler
+from src.db_handler import DBHandler, get_db_handler
 from src.database import get_db
 from src.models import SimilarityScore  # Import your SimilarityScore model
 from domain.recommendation import recommendation_crud, recommendation_schema
@@ -97,7 +97,7 @@ def recommend_based_on_interests(
     ),
     n_recommendations: int = Query(5, description="Number of recommended contents"),
     db: Session = Depends(get_db),
-    db_handler=Depends(get_db_handler),
+    db_handler: DBHandler = Depends(get_db_handler),
 ):
     """
     특정 사용자의 최근 방문한 n_contents 페이지들의 코사인 유사도 점수를 합산하여,
@@ -106,7 +106,7 @@ def recommend_based_on_interests(
 
     try:
         return_contents = []
-        rr = rm.RandomRecommendation()
+        rr = rm.RandomRecommendation(db_handler)
 
         if not n_contents:
             raise HTTPException(
@@ -117,9 +117,9 @@ def recommend_based_on_interests(
         recent_page_ids = db_handler.get_recent_contents(user_id, n_contents)
 
         if recent_page_ids is False:
-            bs = rm.BestSeller()
+            bs = rm.BestSeller(db_handler)
             return_contents.extend(bs.get_best_sellers(6))
-            nr = rm.NewRecommendation()
+            nr = rm.NewRecommendation(db_handler)
             return_contents.extend(nr.get_newest(return_contents, 2))
             return_contents.extend(nr.get_worst_sellers(return_contents, 2))
             return_contents.extend(rr.recommend_randomly(return_contents, 2))
