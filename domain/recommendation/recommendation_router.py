@@ -6,9 +6,9 @@ from starlette import status
 
 import src.recommendation_models as rm
 from src.dna_logger import logger
-from src.db_handler import db_handler
-from src.models import SimilarityScore  # Import your SimilarityScore model
+from src.db_handler import get_db_handler
 from src.database import get_db
+from src.models import SimilarityScore  # Import your SimilarityScore model
 from domain.recommendation import recommendation_crud, recommendation_schema
 
 router = APIRouter(prefix="/api/recommend")
@@ -97,6 +97,7 @@ def recommend_based_on_interests(
     ),
     n_recommendations: int = Query(5, description="Number of recommended contents"),
     db: Session = Depends(get_db),
+    db_handler=Depends(get_db_handler),
 ):
     """
     특정 사용자의 최근 방문한 n_contents 페이지들의 코사인 유사도 점수를 합산하여,
