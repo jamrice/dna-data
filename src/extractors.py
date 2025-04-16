@@ -6,8 +6,20 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 import re
 from src.dna_logger import logger
-from src.db_handler import db_handler
+from src.database import get_db
+from src.db_handler import DBHandler
 import google.generativeai as genai
+from contextlib import contextmanager
+
+
+# DB Connection
+@contextmanager
+def get_handler():
+    db = next(get_db())
+    try:
+        yield DBHandler(db)
+    finally:
+        db.close()
 
 
 class ConfExtractor:
@@ -158,8 +170,8 @@ class ConfExtractor:
             "date": self.conf_info["CONF_DATE"],
             "ord_num": self.params_dict["DAE_NUM"],
         }
-
-        db_handler.save_conf(params=params)
+        with get_handler() as db_handler:
+            db_handler.save_conf(params=params)
 
 
 ## ConfExtractor that takes into account for multiple conference for a day.
@@ -440,7 +452,8 @@ class BillExtractor:
             "pdf_url": self.pdf_url,
         }
         print("_save = bill_id: ", params["bill_id"])
-        db_handler.save_bill(params=params)
+        with get_handler() as db_handler:
+            db_handler.save_bill(params=params)
 
     def save_bill(self):
         """
@@ -458,7 +471,8 @@ class BillExtractor:
 
 class All_BillIdsExtractor:
     def __init__(self, host, user, password):
-        self.results = db_handler.get_all_value_tables("bill_summary", "bill_id")
+        with get_handler() as db_handler:
+            self.results = db_handler.get_all_value_tables("bill_summary", "bill_id")
         print(db_handler.get_all_value_tables("bill_summary", "bill_id"))
         logger.debug("All_BillIdsExtractor get:" + str(len(self.results)))
 
@@ -469,7 +483,8 @@ class All_KeywordExtractor:
         keylist = ["keyword1", "keyword2", "keyword3"]
         for column in keylist:
             table = "bill"
-            results = db_handler.get_all_value_tables(table, column)
+            with get_handler() as db_handler:
+                results = db_handler.get_all_value_tables(table, column)
             if not results is None:
                 self.results += [reulst[0] for reulst in results]
         self.results = list(set(self.results))
@@ -480,7 +495,8 @@ class KeywordExtractor:
         self.bill_id = bill_id
 
         table = "bill_summary"
-        result = db_handler.get_value_table(table, "bill_id", bill_id)
+        with get_handler() as db_handler:
+            result = db_handler.get_value_table(table, "bill_id", bill_id)
         self.headline = result[1]
         self.sumary = result[2]
 
@@ -517,9 +533,10 @@ class KeywordExtractor:
             "keyword3",
         ]
         for index, set_column in enumerate(set_columns):
-            db_handler.update_bill_value(
-                table, column, self.bill_id, set_column, self.get_keywords[index]
-            )
+            with get_handler() as db_handler:
+                db_handler.update_bill_value(
+                    table, column, self.bill_id, set_column, self.get_keywords[index]
+                )
 
 
 class AllScheduleExtractor:

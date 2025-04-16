@@ -317,8 +317,6 @@ def get_db_handler(db: Session = Depends(get_db)):
     return DBHandler(db)
 
 
-db_handler = get_db_handler()
-
 if __name__ == "__main__":
     params = {
         "bill_id": "test_id",
@@ -330,6 +328,7 @@ if __name__ == "__main__":
         "date": "2024-11-27",
         "ord_num": "22",
     }
+    db_handler = get_db_handler()
     db_handler.save_bill(params)
     summaries = db_handler.extract_bills_summary()
     for idx, summary in enumerate(summaries):
