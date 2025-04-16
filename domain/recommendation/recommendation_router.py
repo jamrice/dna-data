@@ -116,7 +116,7 @@ def recommend_based_on_interests(
 
         recent_page_ids = db_handler.get_recent_contents(user_id, n_contents)
 
-        if recent_page_ids is False:
+        if recent_page_ids == False:
             bs = rm.BestSeller(db_handler)
             return_contents.extend(bs.get_best_sellers(6))
             nr = rm.NewRecommendation(db_handler)
@@ -139,7 +139,7 @@ def recommend_based_on_interests(
                 .limit(n_recommendations - n_random)
                 .all()
             )
-            return_contents = [content[0] for content in total_similarity]
+            return_contents = [content[0] for content in total_similarity]  # 여기 문제
             return_contents.extend(rr.recommend_randomly(return_contents, n_random))
 
         if len(return_contents) < n_recommendations:

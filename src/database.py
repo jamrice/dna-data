@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import OperationalError
-
+from contextlib import contextmanager
 import os
 from dotenv import load_dotenv
 from dna_logger import logger
@@ -41,13 +41,12 @@ Base.metadata = MetaData(naming_convention=naming_convention)
 
 
 # Dependency for DB connection
+@contextmanager
 def get_db():
     db = SessionLocal()
-    logger.info("DB session opened")
     try:
         yield db
     finally:
-        logger.info("DB session closed")
         db.close()
 
 
